@@ -51,12 +51,17 @@ lib/
 │   ├── lesson.dart
 │   ├── question.dart
 │   └── user_progress.dart
-├── data/
-│   ├── curriculum_data.dart      # 課程資料（108 課綱對應）
-│   ├── chinese_lessons.dart      # 國語課文（對標 108 課綱）
-│   ├── math_lessons.dart         # 數學課文（對標 108 課綱）
-│   ├── character_sets.dart       # 國字手寫練習字庫
-│   └── review_question_pool.dart # 延伸題庫（按學科×年級）
+├── curriculum/               # 課綱與題庫（依領域分資料夾）
+│   ├── curriculum.dart         # 模組入口（export catalog / subjects / review）
+│   ├── subjects.dart           # 六大領域列表
+│   ├── catalog.dart            # 內嵌示範單元 + 匯總 kLessons
+│   ├── chinese/chinese_lessons.dart
+│   ├── math/math_lessons.dart
+│   ├── science/science_g1_lessons.dart
+│   ├── review/review_question_pool.dart
+│   └── handwriting/          # 筆順／字庫
+│       ├── character_sets.dart
+│       └── stroke_templates.dart
 ├── providers/
 │   └── progress_provider.dart # 學習進度狀態管理
 ├── services/                 # 雲端 API 與快取
@@ -99,13 +104,18 @@ lib/
 backend/                      # Laravel 11 + Filament 3 後端（詳 backend/README.md）
 ├── app/
 │   ├── Filament/Resources/   # 管理後台 CRUD（學科／課程／題目）
-│   ├── Http/Controllers/Api/CurriculumController.php  # 題庫 API
+│   ├── Http/Controllers/Api/V1/
+│   │   ├── Content/CurriculumController.php  # 題庫／課程 API（Content 模組）
+│   │   └── ModuleStatusController.php         # user／learning 等預留 status
 │   └── Models/               # Subject / Lesson / Question / VocabularyItem
 ├── database/
-│   ├── data/science_g1_sync.php  # 小一自然課程（與 lib/data/science_g1_lessons.dart 對齊）
+│   ├── data/science_g1_sync.php  # 小一自然課程（與 lib/curriculum/science/science_g1_lessons.dart 對齊）
 │   ├── migrations/           # subjects / lessons / questions / vocabulary_items
 │   └── seeders/              # 題庫 + ScienceG1CurriculumSeeder 等
-└── routes/api.php            # /api/v1/*
+└── routes/api.php            # /api/v1（Gateway 分區：content／user…）
+
+docs/
+└── ARCHITECTURE.md           # Flutter ↔ Gateway ↔ 模組 ↔ MySQL 總覽
 ```
 
 ## 🚀 快速開始
@@ -185,7 +195,7 @@ php artisan migrate:fresh --seed                   # 建表 + 匯入題庫與課
 php artisan serve                                  # http://127.0.0.1:8000
 ```
 
-小一自然課程與 App 內 `science_g1_lessons` 使用相同 `code`（例如 `science-g1-plants`）。**以檔案為準同步進資料庫**：先改 `lib/data/science_g1_lessons.dart` 與 `backend/database/data/science_g1_sync.php` 保持一致，再執行 `php artisan db:seed --class=ScienceG1CurriculumSeeder`（會依該 PHP 檔 `updateOrCreate` 課程與題目）。若只在 Filament 改 DB、未改上述檔案，下次執行該 Seeder 時內容會被檔案覆寫。
+小一自然課程與 App 內 `science_g1_lessons` 使用相同 `code`（例如 `science-g1-plants`）。**以檔案為準同步進資料庫**：先改 `lib/curriculum/science/science_g1_lessons.dart` 與 `backend/database/data/science_g1_sync.php` 保持一致，再執行 `php artisan db:seed --class=ScienceG1CurriculumSeeder`（會依該 PHP 檔 `updateOrCreate` 課程與題目）。若只在 Filament 改 DB、未改上述檔案，下次執行該 Seeder 時內容會被檔案覆寫。
 
 管理後台：<http://127.0.0.1:8000/admin>
 - 預設帳號：`admin@kidlearn.local`
@@ -205,7 +215,7 @@ Flutter 連後端時的 BaseUrl（在 `lib/services/api_config.dart`）：
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
 ```
 
-更多後端說明見 [`backend/README.md`](backend/README.md)。
+更多後端說明見 [`backend/README.md`](backend/README.md)。**API 模組分區**見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
 ## 🎨 設計理念
 

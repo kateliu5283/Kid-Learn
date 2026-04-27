@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/widgets.dart';
 
-import '../data/stroke_templates.dart';
+import '../curriculum/handwriting/stroke_templates.dart';
 
 /// 單筆評分結果
 class StrokeScore {

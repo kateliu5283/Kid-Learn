@@ -2,8 +2,8 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
-import '../../data/character_sets.dart';
-import '../../data/stroke_templates.dart';
+import '../../curriculum/handwriting/character_sets.dart';
+import '../../curriculum/handwriting/stroke_templates.dart';
 import '../../services/stroke_matcher.dart';
 import 'handwriting_canvas.dart';
 

@@ -2,7 +2,7 @@
 
 這是「小學堂 Kid Learn」的後端服務，負責：
 
-1. **題庫／課程管理 API**：Flutter app 透過 `GET /api/v1/*` 拉取最新題目和課程。
+1. **API Gateway（`/api/v1`）**：依業務模組分區（**Content** 題庫／課程為核心；User／Learning／Missions／Analytics 預留）。詳見專案根目錄 [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)。
 2. **網頁端管理後台（Filament）**：老師／內容管理員可以在瀏覽器新增、編輯、上下架題目，無需改 code。
 
 ## 技術堆疊
@@ -27,8 +27,10 @@ backend/
 │   │   │       ├── QuestionsRelationManager.php      # 在課程頁直接管題目
 │   │   │       └── VocabularyItemsRelationManager.php# 在課程頁直接管字詞
 │   │   └── QuestionResource.php       # 題目總覽 CRUD
-│   ├── Http/Controllers/Api/
-│   │   └── CurriculumController.php   # 題庫／課程 API 實作
+│   ├── Http/Controllers/Api/V1/
+│   │   ├── Content/
+│   │   │   └── CurriculumController.php  # Content 模組：課程／題目 API
+│   │   └── ModuleStatusController.php    # 其他模組預留 GET …/status
 │   ├── Models/
 │   │   ├── Subject.php
 │   │   ├── Lesson.php
@@ -93,7 +95,7 @@ php artisan migrate:fresh --seed
 
 這會建立資料表，並種入 **6 個學科、示範課程（含與 App 同步的小一自然 11 單元）、380+ 題題目**（另含約 30 題綁定小一自然各課）以及一個 admin 帳號：
 
-**與 Flutter 課程同步（小一自然）**：請維護 `database/data/science_g1_sync.php`，並與專案根目錄 `lib/data/science_g1_lessons.dart` 對齊（`code` = App 的 `Lesson.id`）。變更後執行 `php artisan db:seed --class=ScienceG1CurriculumSeeder` 或整體 `migrate:fresh --seed`。
+**與 Flutter 課程同步（小一自然）**：請維護 `database/data/science_g1_sync.php`，並與專案根目錄 `lib/curriculum/science/science_g1_lessons.dart` 對齊（`code` = App 的 `Lesson.id`）。變更後執行 `php artisan db:seed --class=ScienceG1CurriculumSeeder` 或整體 `migrate:fresh --seed`。
 
 | 帳號                       | 密碼       |
 | -------------------------- | ---------- |
@@ -110,23 +112,35 @@ Server 預設跑在 <http://127.0.0.1:8000>。
 - 後台（Filament）： <http://127.0.0.1:8000/admin>
 - API 健康檢查： <http://127.0.0.1:8000/api/v1/ping>
 
-## API 清單
+## API 清單（Gateway `/api/v1`）
 
-所有 endpoints 都在 `/api/v1` 下：
+### Content（題庫系統）— 建議使用
 
-| Method | 路徑                    | 說明                                  |
-| ------ | ----------------------- | ------------------------------------- |
-| GET    | `/ping`                 | 健康檢查                              |
-| GET    | `/subjects`             | 取得所有學科                          |
-| GET    | `/lessons`              | 取得課程列表，可用 `?subject=math&grade=1&semester=first` 過濾 |
-| GET    | `/lessons/{code}`       | 單一課程詳情（含該課所有題目 + 字詞） |
-| GET    | `/questions`            | 取得題目，可用 `?subject=math&grade=2&random=1&limit=10` |
-| GET    | `/snapshot`             | 一次抓整份快照（學科、課程、免費題目）給 Flutter app 做本地快取 |
+| Method | 路徑 | 說明 |
+| ------ | ---- | ---- |
+| GET | `/content/subjects` | 取得所有學科 |
+| GET | `/content/lessons` | 課程列表（`?subject=math&grade=1&semester=first`） |
+| GET | `/content/lessons/{code}` | 單一課程詳情（含題目 + 字詞） |
+| GET | `/content/questions` | 題目列表（`?subject=math&grade=2&random=1&limit=10`） |
+| GET | `/content/snapshot` | 快照（學科、課程、免費題）供 Flutter 快取 |
+
+### 其他模組（預留）
+
+| Method | 路徑 | 說明 |
+| ------ | ---- | ---- |
+| GET | `/user/status` | 使用者模組階段說明 |
+| GET | `/learning/status` | 學習紀錄模組階段說明 |
+| GET | `/missions/status` | 任務模組階段說明 |
+| GET | `/analytics/status` | 分析模組階段說明 |
+
+### Legacy（相容舊路徑）
+
+`/subjects`、`/lessons`、`/questions`、`/snapshot` 仍指向同一組實作；**新客戶端請改走 `/content/*`**。
 
 ### 範例
 
 ```bash
-curl "http://127.0.0.1:8000/api/v1/questions?subject=math&grade=1&random=1&limit=5"
+curl "http://127.0.0.1:8000/api/v1/content/questions?subject=math&grade=1&random=1&limit=5"
 ```
 
 ## 管理後台操作

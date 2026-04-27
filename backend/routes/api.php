@@ -1,11 +1,42 @@
 <?php
 
-use App\Http\Controllers\Api\CurriculumController;
+use App\Http\Controllers\Api\V1\Content\CurriculumController;
+use App\Http\Controllers\Api\V1\ModuleStatusController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
-    Route::get('ping', fn() => response()->json(['status' => 'ok', 'time' => now()->toIso8601String()]));
+/*
+|--------------------------------------------------------------------------
+| API Gateway（Laravel）— /api/v1
+|--------------------------------------------------------------------------
+| 依業務模組分區（與 docs/ARCHITECTURE.md 一致）：
+|   content   — 題庫／課程（核心）
+|   user      — 使用者（預留）
+|   learning  — 學習紀錄／進度（預留）
+|   missions  — 任務（預留）
+|   analytics — 分析（預留）
+|
+| 舊路徑（/api/v1/subjects 等）仍暫時轉發至 Content，方便既有工具相容。
+*/
 
+Route::prefix('v1')->group(function () {
+    Route::get('ping', fn () => response()->json(['status' => 'ok', 'time' => now()->toIso8601String()]));
+
+    // —— Content（題庫系統）⭐ ——
+    Route::prefix('content')->group(function () {
+        Route::get('subjects', [CurriculumController::class, 'subjects']);
+        Route::get('lessons', [CurriculumController::class, 'lessons']);
+        Route::get('lessons/{code}', [CurriculumController::class, 'lesson']);
+        Route::get('questions', [CurriculumController::class, 'questions']);
+        Route::get('snapshot', [CurriculumController::class, 'snapshot']);
+    });
+
+    // —— 其餘模組（預留）——
+    Route::get('user/status', [ModuleStatusController::class, 'user']);
+    Route::get('learning/status', [ModuleStatusController::class, 'learning']);
+    Route::get('missions/status', [ModuleStatusController::class, 'missions']);
+    Route::get('analytics/status', [ModuleStatusController::class, 'analytics']);
+
+    // —— Legacy：舊版路徑（請改走 /content/*）——
     Route::get('subjects', [CurriculumController::class, 'subjects']);
     Route::get('lessons', [CurriculumController::class, 'lessons']);
     Route::get('lessons/{code}', [CurriculumController::class, 'lesson']);

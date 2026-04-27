@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import '../../data/character_sets.dart';
-import '../../data/stroke_templates.dart';
+import '../../curriculum/handwriting/character_sets.dart';
+import '../../curriculum/handwriting/stroke_templates.dart';
 import 'handwriting_canvas.dart';
 import 'stroke_order_challenge_screen.dart';
 

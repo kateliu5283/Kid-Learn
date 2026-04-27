@@ -9,7 +9,7 @@ use App\Models\VocabularyItem;
 use Illuminate\Database\Seeder;
 
 /**
- * 與 Flutter `lib/data/science_g1_lessons.dart` 同步：小一自然 11 課 + 單元題目。
+ * 與 Flutter `lib/curriculum/science/science_g1_lessons.dart` 同步：小一自然 11 課 + 單元題目。
  *
  * 資料來源：database/data/science_g1_sync.php
  */

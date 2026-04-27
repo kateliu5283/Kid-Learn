@@ -1,7 +1,7 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../data/curriculum_data.dart';
+import '../curriculum/curriculum.dart';
 import '../models/lesson.dart';
 import '../providers/progress_provider.dart';
 import '../theme/app_theme.dart';

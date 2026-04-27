@@ -4,14 +4,16 @@ import 'package:http/http.dart' as http;
 import '../models/question.dart';
 import 'api_config.dart';
 
-/// 從 Laravel 後端取得題庫／課程的 service。
+/// 從 Laravel 後端取得 **Content（題庫／課程）** 模組資料。
 ///
-/// 介面對應 backend `routes/api.php`：
-///   GET  /v1/subjects
-///   GET  /v1/lessons
-///   GET  /v1/lessons/{code}
-///   GET  /v1/questions
-///   GET  /v1/snapshot
+/// 介面對應 `routes/api.php` 之 `/api/v1/content/*`：
+///   GET  /v1/content/subjects
+///   GET  /v1/content/lessons
+///   GET  /v1/content/lessons/{code}
+///   GET  /v1/content/questions
+///   GET  /v1/content/snapshot
+///
+/// （舊路徑 `/v1/subjects` 等仍可由 Gateway 轉發，請以 `/content/*` 為準。）
 class CurriculumApi {
   CurriculumApi({http.Client? client, String? baseUrl})
       : _client = client ?? http.Client(),
@@ -46,7 +48,7 @@ class CurriculumApi {
     int limit = 50,
   }) async {
     final res = await _client
-        .get(_u('/questions', {
+        .get(_u('/content/questions', {
           if (subjectCode != null) 'subject': subjectCode,
           if (grade != null) 'grade': grade,
           if (lessonCode != null) 'lesson': lessonCode,
@@ -67,7 +69,7 @@ class CurriculumApi {
   /// 一次抓整份快照（subjects + lessons + 免費題目）
   Future<CurriculumSnapshot> fetchSnapshot() async {
     final res = await _client
-        .get(_u('/snapshot'))
+        .get(_u('/content/snapshot'))
         .timeout(ApiConfig.timeout);
     _throwIfError(res);
     final body = jsonDecode(res.body) as Map<String, dynamic>;

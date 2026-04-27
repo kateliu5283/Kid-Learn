@@ -1,7 +1,8 @@
 /// 後端 API 設定。
 ///
-/// 本地開發時，Flutter emulator 要連電腦上的 Laravel 伺服器：
+/// 本地開發時，Flutter emulator 要連電腦上的 Laravel API Gateway：
 ///  - iOS 模擬器：`http://127.0.0.1:8000/api/v1`
+/// 課程／題庫請求實際路徑為 `/api/v1/content/*`（由 CurriculumApi 組出）。
 ///  - Android 模擬器：`http://10.0.2.2:8000/api/v1`
 ///  - 真機：改成電腦內網 IP，例如 `http://192.168.1.100:8000/api/v1`
 ///  - Web：`http://127.0.0.1:8000/api/v1`

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import '../../data/curriculum_data.dart';
+import '../../curriculum/curriculum.dart';
 import '../../models/lesson.dart';
 import '../../widgets/kid_button.dart';
 import '../quiz_screen.dart';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/curriculum_data.dart';
-import '../../data/review_question_pool.dart';
+import '../../curriculum/curriculum.dart';
 import '../../providers/progress_provider.dart';
 import '../../services/remote_question_repository.dart';
 import 'review_screen.dart';

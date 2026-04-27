@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../data/curriculum_data.dart';
+import '../curriculum/curriculum.dart';
 import '../providers/progress_provider.dart';
 import '../widgets/subject_card.dart';
 import 'lesson_list_screen.dart';

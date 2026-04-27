@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\V1\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
@@ -9,6 +9,11 @@ use App\Models\Subject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * 題庫系統（Content）— 課程、單元、題目、快照。
+ *
+ * 對外路徑：`GET /api/v1/content/*`（見 `routes/api.php`）。
+ */
 class CurriculumController extends Controller
 {
     /**
@@ -41,7 +46,7 @@ class CurriculumController extends Controller
 
         if ($request->filled('subject')) {
             $subjectCode = $request->string('subject');
-            $query->whereHas('subject', fn($q) => $q->where('code', $subjectCode));
+            $query->whereHas('subject', fn ($q) => $q->where('code', $subjectCode));
         }
         if ($request->filled('grade')) {
             $query->where('grade', $request->integer('grade'));
@@ -59,7 +64,7 @@ class CurriculumController extends Controller
             ->get();
 
         return response()->json([
-            'data' => $lessons->map(fn($l) => $this->transformLesson($l))->values(),
+            'data' => $lessons->map(fn ($l) => $this->transformLesson($l))->values(),
             'meta' => [
                 'count' => $lessons->count(),
                 'synced_at' => now()->toIso8601String(),
@@ -75,7 +80,7 @@ class CurriculumController extends Controller
         $lesson = Lesson::with([
             'subject:id,code,name',
             'vocabularyItems',
-            'questions' => fn($q) => $q->where('is_published', true)->orderBy('sort'),
+            'questions' => fn ($q) => $q->where('is_published', true)->orderBy('sort'),
         ])
             ->where('code', $code)
             ->where('is_published', true)
@@ -102,7 +107,7 @@ class CurriculumController extends Controller
         }
 
         if ($request->filled('subject')) {
-            $query->whereHas('subject', fn($q) => $q->where('code', $request->string('subject')));
+            $query->whereHas('subject', fn ($q) => $q->where('code', $request->string('subject')));
         }
         if ($request->filled('grade')) {
             $query->where('grade', $request->integer('grade'));
@@ -111,7 +116,7 @@ class CurriculumController extends Controller
             $query->where('difficulty', $request->string('difficulty'));
         }
         if ($request->filled('lesson')) {
-            $query->whereHas('lesson', fn($q) => $q->where('code', $request->string('lesson')));
+            $query->whereHas('lesson', fn ($q) => $q->where('code', $request->string('lesson')));
         }
         if ($request->boolean('random', false)) {
             $query->inRandomOrder();
@@ -121,7 +126,7 @@ class CurriculumController extends Controller
         $questions = $query->limit($limit)->get();
 
         return response()->json([
-            'data' => $questions->map(fn($q) => $this->transformQuestion($q))->values(),
+            'data' => $questions->map(fn ($q) => $this->transformQuestion($q))->values(),
             'meta' => [
                 'count' => $questions->count(),
                 'synced_at' => now()->toIso8601String(),
@@ -146,8 +151,8 @@ class CurriculumController extends Controller
 
         return response()->json([
             'subjects' => $subjects,
-            'lessons' => $lessons->map(fn($l) => $this->transformLesson($l))->values(),
-            'questions' => $questions->map(fn($q) => $this->transformQuestion($q))->values(),
+            'lessons' => $lessons->map(fn ($l) => $this->transformLesson($l))->values(),
+            'questions' => $questions->map(fn ($q) => $this->transformQuestion($q))->values(),
             'meta' => [
                 'synced_at' => now()->toIso8601String(),
                 'version' => config('app.curriculum_version', '1.0.0'),
@@ -171,14 +176,14 @@ class CurriculumController extends Controller
             'estimated_minutes' => $lesson->estimated_minutes,
             'objectives' => $lesson->objectives ?? [],
             'key_points' => $lesson->key_points ?? [],
-            'vocabulary' => $lesson->vocabularyItems->map(fn($v) => [
+            'vocabulary' => $lesson->vocabularyItems->map(fn ($v) => [
                 'term' => $v->term,
                 'meaning' => $v->meaning,
                 'example' => $v->example,
             ])->values(),
             'is_premium' => $lesson->is_premium,
             'questions' => $withQuestions
-                ? $lesson->questions->map(fn($q) => $this->transformQuestion($q))->values()
+                ? $lesson->questions->map(fn ($q) => $this->transformQuestion($q))->values()
                 : null,
         ];
     }

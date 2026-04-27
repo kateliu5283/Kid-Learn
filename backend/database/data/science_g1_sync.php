@@ -1,7 +1,7 @@
 <?php
 
 /**
- * 與 Flutter `lib/data/science_g1_lessons.dart` 同步的小一自然課程＋題目。
+ * 與 Flutter `lib/curriculum/science/science_g1_lessons.dart` 同步的小一自然課程＋題目。
  *
  * 修改課程內容時：請同時更新 Dart 與本檔，再執行 php artisan db:seed --class=ScienceG1CurriculumSeeder
  * 或 migrate:fresh --seed。
