@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    /*
+    | 相容 OpenAI Chat Completions 的端點（可改為自建代理或其他供應商）。
+    */
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'base_url' => rtrim(env('OPENAI_BASE_URL', 'https://api.openai.com/v1'), '/'),
+        'question_model' => env('AI_QUESTION_MODEL', 'gpt-4o-mini'),
+    ],
+
 ];

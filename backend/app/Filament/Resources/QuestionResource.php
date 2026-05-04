@@ -106,11 +106,43 @@ class QuestionResource extends Resource
 
             Forms\Components\Section::make('上架設定')->schema([
                 Forms\Components\Grid::make(3)->schema([
-                    Forms\Components\Toggle::make('is_published')->label('已發佈')->default(true),
+                    Forms\Components\Toggle::make('is_published')
+                        ->label('已發佈')
+                        ->default(true)
+                        ->helperText('僅「審核通過」的題目可發佈；未通過者儲存時會自動下架。'),
                     Forms\Components\Toggle::make('is_premium')->label('付費題目')->default(false),
                     Forms\Components\TextInput::make('sort')->label('排序')->numeric()->default(0),
                 ]),
             ]),
+
+            Forms\Components\Section::make('來源與審核')
+                ->visibleOn('edit')
+                ->schema([
+                    Forms\Components\Placeholder::make('source_display')
+                        ->label('來源')
+                        ->content(fn (?Question $record): string => match ($record?->source) {
+                            Question::SOURCE_AI => 'AI 產生',
+                            default => '手動',
+                        }),
+                    Forms\Components\Placeholder::make('approval_display')
+                        ->label('審核狀態')
+                        ->content(fn (?Question $record): string => match ($record?->approval_status) {
+                            Question::APPROVAL_PENDING => '待審核',
+                            Question::APPROVAL_REJECTED => '已駁回',
+                            default => '已通過',
+                        }),
+                    Forms\Components\Placeholder::make('reviewed_display')
+                        ->label('審核時間／人員')
+                        ->content(function (?Question $record): string {
+                            if (! $record?->reviewed_at) {
+                                return '—';
+                            }
+                            $name = $record->reviewer?->name ?? '（系統）';
+
+                            return $record->reviewed_at->format('Y-m-d H:i').' · '.$name;
+                        }),
+                ])
+                ->columns(1),
         ]);
     }
 
@@ -119,7 +151,7 @@ class QuestionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('subject.name')->label('學科')->badge(),
-                Tables\Columns\TextColumn::make('grade')->label('年級')->formatStateUsing(fn($s) => "{$s} 年級"),
+                Tables\Columns\TextColumn::make('grade')->label('年級')->formatStateUsing(fn ($s) => "{$s} 年級"),
                 Tables\Columns\TextColumn::make('prompt')
                     ->label('題幹')
                     ->limit(40)
@@ -127,7 +159,7 @@ class QuestionResource extends Resource
                     ->wrap(),
                 Tables\Columns\TextColumn::make('type')
                     ->label('題型')
-                    ->formatStateUsing(fn($s) => match($s) {
+                    ->formatStateUsing(fn ($s) => match ($s) {
                         'multiple_choice' => '選擇',
                         'true_false' => '是非',
                         'fill_blank' => '填空',
@@ -136,18 +168,39 @@ class QuestionResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('difficulty')
                     ->label('難度')
-                    ->formatStateUsing(fn($s) => match($s) {
+                    ->formatStateUsing(fn ($s) => match ($s) {
                         'easy' => '簡單',
                         'hard' => '困難',
                         default => '普通',
                     })
                     ->badge()
-                    ->color(fn($state) => match($state) {
+                    ->color(fn ($state) => match ($state) {
                         'easy' => 'success',
                         'hard' => 'danger',
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('lesson.title')->label('所屬課程')->limit(20)->placeholder('—'),
+                Tables\Columns\TextColumn::make('source')
+                    ->label('來源')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        Question::SOURCE_AI => 'AI',
+                        default => '手動',
+                    })
+                    ->color(fn (?string $state): string => $state === Question::SOURCE_AI ? 'info' : 'gray'),
+                Tables\Columns\TextColumn::make('approval_status')
+                    ->label('審核')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        Question::APPROVAL_PENDING => '待審',
+                        Question::APPROVAL_REJECTED => '駁回',
+                        default => '通過',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        Question::APPROVAL_PENDING => 'warning',
+                        Question::APPROVAL_REJECTED => 'danger',
+                        default => 'success',
+                    }),
                 Tables\Columns\IconColumn::make('is_published')->label('發佈')->boolean(),
                 Tables\Columns\IconColumn::make('is_premium')
                     ->label('付費')
@@ -168,9 +221,52 @@ class QuestionResource extends Resource
                     ->options(['easy' => '簡單', 'normal' => '普通', 'hard' => '困難']),
                 Tables\Filters\TernaryFilter::make('is_published')->label('已發佈'),
                 Tables\Filters\TernaryFilter::make('is_premium')->label('付費題目'),
+                Tables\Filters\SelectFilter::make('source')
+                    ->label('來源')
+                    ->options([
+                        Question::SOURCE_MANUAL => '手動',
+                        Question::SOURCE_AI => 'AI',
+                    ]),
+                Tables\Filters\SelectFilter::make('approval_status')
+                    ->label('審核')
+                    ->options([
+                        Question::APPROVAL_PENDING => '待審核',
+                        Question::APPROVAL_APPROVED => '已通過',
+                        Question::APPROVAL_REJECTED => '已駁回',
+                    ]),
             ])
             ->defaultSort('id', 'desc')
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('審核通過')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (Question $record): bool => $record->source === Question::SOURCE_AI
+                        && $record->approval_status === Question::APPROVAL_PENDING)
+                    ->requiresConfirmation()
+                    ->action(function (Question $record): void {
+                        $record->update([
+                            'approval_status' => Question::APPROVAL_APPROVED,
+                            'is_published' => true,
+                            'reviewed_at' => now(),
+                            'reviewed_by' => auth()->id(),
+                        ]);
+                    }),
+                Tables\Actions\Action::make('reject')
+                    ->label('駁回')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Question $record): bool => $record->source === Question::SOURCE_AI
+                        && $record->approval_status === Question::APPROVAL_PENDING)
+                    ->requiresConfirmation()
+                    ->action(function (Question $record): void {
+                        $record->update([
+                            'approval_status' => Question::APPROVAL_REJECTED,
+                            'is_published' => false,
+                            'reviewed_at' => now(),
+                            'reviewed_by' => auth()->id(),
+                        ]);
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -180,12 +276,32 @@ class QuestionResource extends Resource
                     Tables\Actions\BulkAction::make('publish')
                         ->label('批次發佈')
                         ->icon('heroicon-o-check-circle')
-                        ->action(fn($records) => $records->each->update(['is_published' => true])),
+                        ->action(fn ($records) => $records->each(function (Question $record): void {
+                            if ($record->approval_status === Question::APPROVAL_APPROVED) {
+                                $record->update(['is_published' => true]);
+                            }
+                        })),
+                    Tables\Actions\BulkAction::make('approveAiPending')
+                        ->label('批次審核通過（AI 待審）')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each(function (Question $record): void {
+                            if ($record->source === Question::SOURCE_AI
+                                && $record->approval_status === Question::APPROVAL_PENDING) {
+                                $record->update([
+                                    'approval_status' => Question::APPROVAL_APPROVED,
+                                    'is_published' => true,
+                                    'reviewed_at' => now(),
+                                    'reviewed_by' => auth()->id(),
+                                ]);
+                            }
+                        })),
                     Tables\Actions\BulkAction::make('unpublish')
                         ->label('批次下架')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn($records) => $records->each->update(['is_published' => false])),
+                        ->action(fn ($records) => $records->each->update(['is_published' => false])),
                 ]),
             ]);
     }

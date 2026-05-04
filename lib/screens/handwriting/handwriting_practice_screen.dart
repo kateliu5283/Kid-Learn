@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../curriculum/handwriting/character_sets.dart';
 import '../../curriculum/handwriting/stroke_templates.dart';
+import '../../services/stroke_matcher.dart';
 import 'handwriting_canvas.dart';
 import 'stroke_order_challenge_screen.dart';
 
@@ -31,6 +32,12 @@ class _HandwritingPracticeScreenState
 
   final FlutterTts _tts = FlutterTts();
 
+  final GlobalKey _canvasKey = GlobalKey();
+  final StrokeMatcher _matcher = StrokeMatcher();
+
+  /// 軌跡／筆順評分結果（按「評分」後更新）
+  CharacterScore? _evalScore;
+
   @override
   void initState() {
     super.initState();
@@ -47,10 +54,19 @@ class _HandwritingPracticeScreenState
 
   CharacterItem get _current => widget.set.characters[_index];
 
-  void _clear() => setState(_strokes.clear);
+  void _clear() {
+    setState(() {
+      _strokes.clear();
+      _evalScore = null;
+    });
+  }
+
   void _undo() {
     if (_strokes.isEmpty) return;
-    setState(() => _strokes.removeLast());
+    setState(() {
+      _strokes.removeLast();
+      _evalScore = null;
+    });
   }
 
   void _prev() {
@@ -58,6 +74,7 @@ class _HandwritingPracticeScreenState
     setState(() {
       _index--;
       _strokes.clear();
+      _evalScore = null;
     });
   }
 
@@ -69,12 +86,45 @@ class _HandwritingPracticeScreenState
     setState(() {
       _index++;
       _strokes.clear();
+      _evalScore = null;
     });
   }
 
   Future<void> _speak() async {
     await _tts.stop();
     await _tts.speak(_current.char);
+  }
+
+  /// 以軌跡辨識比對標準筆順（需該字有標準筆順資料）。
+  void _evaluateWriting() {
+    if (_strokes.isEmpty) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('先畫幾筆，再按評分喔'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (!hasTemplate(_current.char)) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('這個字尚無標準筆順資料，無法比對軌跡'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final box = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final size = box?.size ?? const Size(320, 320);
+    final cs = _matcher.matchCharacter(
+      char: _current.char,
+      userStrokes: _strokes.map((s) => s.points).toList(),
+      canvasSize: size,
+    );
+    setState(() => _evalScore = cs);
   }
 
   void _showFinishDialog() {
@@ -102,6 +152,7 @@ class _HandwritingPracticeScreenState
               setState(() {
                 _index = 0;
                 _strokes.clear();
+                _evalScore = null;
               });
             },
             child: const Text('從頭練'),
@@ -146,17 +197,54 @@ class _HandwritingPracticeScreenState
               children: [
                 _buildInfo(total),
                 const SizedBox(height: 12),
-                HandwritingCanvas(
-                  targetChar: _current.char,
-                  strokes: _strokes,
-                  brushWidth: _brushWidth,
-                  brushColor: _brushColor,
-                  showGuide: _showGuide,
-                  showHint: _showHint,
-                  onStrokesChanged: () => setState(() {}),
+                KeyedSubtree(
+                  key: _canvasKey,
+                  child: HandwritingCanvas(
+                    targetChar: _current.char,
+                    strokes: _strokes,
+                    brushWidth: _brushWidth,
+                    brushColor: _brushColor,
+                    showGuide: _showGuide,
+                    showHint: _showHint,
+                    onStrokesChanged: () =>
+                        setState(() => _evalScore = null),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildToolbar(),
+                if (hasTemplate(_current.char)) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed:
+                          _strokes.isEmpty ? null : _evaluateWriting,
+                      icon: const Icon(Icons.auto_fix_high, size: 20),
+                      label: const Text(
+                        '軌跡／筆順評分',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        foregroundColor: const Color(0xFF1565C0),
+                        side: const BorderSide(color: Color(0xFF42A5F5)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '將你的筆畫與標準筆順做位置、方向與形狀比對',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                if (_evalScore != null) ...[
+                  const SizedBox(height: 12),
+                  _buildEvalCard(_evalScore!),
+                ],
                 const SizedBox(height: 12),
                 _buildActions(total),
               ],
@@ -342,6 +430,132 @@ class _HandwritingPracticeScreenState
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEvalCard(CharacterScore cs) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.passed
+            ? const Color(0xFFE8F5E9)
+            : const Color(0xFFFFEBEE),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.passed
+              ? const Color(0xFF66BB6A)
+              : const Color(0xFFEF5350),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                cs.passed ? Icons.auto_graph : Icons.info_outline,
+                color: cs.passed
+                    ? const Color(0xFF43A047)
+                    : const Color(0xFFE53935),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  cs.passed
+                      ? '整體 ${cs.overall.round()} 分'
+                      : '整體 ${cs.overall.round()} 分，再試試看',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Row(
+                children: List.generate(3, (i) {
+                  final filled = i < cs.stars;
+                  return Icon(
+                    filled ? Icons.star : Icons.star_border,
+                    color: const Color(0xFFFFB300),
+                    size: 22,
+                  );
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            cs.expectedStrokes == cs.actualStrokes
+                ? '筆劃數：${cs.actualStrokes} 筆'
+                : '筆劃數：你寫了 ${cs.actualStrokes} 筆，標準為 ${cs.expectedStrokes} 筆',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '每一筆（軌跡相似度）',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF37474F),
+            ),
+          ),
+          const SizedBox(height: 6),
+          ...List.generate(cs.perStroke.length, (i) {
+            final s = cs.perStroke[i];
+            final label = '第 ${i + 1} 筆';
+            if (s == null) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('$label：缺筆')),
+                    const Icon(Icons.remove_circle_outline,
+                        color: Colors.grey, size: 18),
+                  ],
+                ),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$label　總分 ${s.overall.round()}　${s.label}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: s.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: s.pathTangentMatch.clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: Colors.grey.shade200,
+                      color: const Color(0xFF1565C0),
+                    ),
+                  ),
+                  Text(
+                    '沿路方向吻合 ${(s.pathTangentMatch * 100).round()}%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

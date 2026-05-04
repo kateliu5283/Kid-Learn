@@ -90,6 +90,7 @@ class _StrokeOrderChallengeScreenState
           startMatch: 0,
           endMatch: 0,
           directionMatch: 0,
+          pathTangentMatch: 0,
           shapeMatch: 0,
         ));
       });

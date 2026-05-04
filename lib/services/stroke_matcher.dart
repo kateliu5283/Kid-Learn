@@ -3,13 +3,14 @@ import 'package:flutter/widgets.dart';
 
 import '../curriculum/handwriting/stroke_templates.dart';
 
-/// 單筆評分結果
+/// 單筆評分結果（軌跡辨識：起終點、粗方向、沿路徑切線、形狀）
 class StrokeScore {
   StrokeScore({
     required this.overall,
     required this.startMatch,
     required this.endMatch,
     required this.directionMatch,
+    required this.pathTangentMatch,
     required this.shapeMatch,
   });
 
@@ -22,8 +23,11 @@ class StrokeScore {
   /// 收筆位置相符度 0..1
   final double endMatch;
 
-  /// 方向相符度 0..1（-1..1 的 cosθ 線性映射）
+  /// 起迄大致方向（長軸）相符度 0..1
   final double directionMatch;
+
+  /// 沿路徑切線方向與標準筆順的平均相符度 0..1（軌跡辨識核心）
+  final double pathTangentMatch;
 
   /// 整體形狀相符度 0..1（等距取樣後平均距離反向映射）
   final double shapeMatch;
@@ -108,6 +112,7 @@ class StrokeMatcher {
           startMatch: 0,
           endMatch: 0,
           directionMatch: 0,
+          pathTangentMatch: 0,
           shapeMatch: 0);
     }
     if (ref.length < 2) {
@@ -116,6 +121,7 @@ class StrokeMatcher {
           startMatch: 0.5,
           endMatch: 0.5,
           directionMatch: 0.5,
+          pathTangentMatch: 0.5,
           shapeMatch: 0.5);
     }
 
@@ -126,25 +132,29 @@ class StrokeMatcher {
     final startMatch = _distanceScore(uSamples.first, rSamples.first);
     final endMatch = _distanceScore(uSamples.last, rSamples.last);
 
-    // 2) 方向（起點→終點）餘弦相似度
+    // 2) 長軸方向（起點→終點）餘弦相似度
     final uDir = _normalize2(uSamples.last - uSamples.first);
     final rDir = _normalize2(rSamples.last - rSamples.first);
     final cos = (uDir.dx * rDir.dx + uDir.dy * rDir.dy).clamp(-1.0, 1.0);
     final directionMatch = ((cos + 1) / 2).toDouble(); // [-1,1] -> [0,1]
 
-    // 3) 整體形狀：點對點平均距離
+    // 3) 沿路徑切線：每一段小向量的方向與範本對齊程度（軌跡辨識）
+    final pathTangentMatch =
+        _averageTangentAlignment(uSamples, rSamples);
+
+    // 4) 整體形狀：點對點平均距離（弧長重取樣後對齊）
     double sumD = 0;
     for (var i = 0; i < sampleCount; i++) {
       sumD += (uSamples[i] - rSamples[i]).distance;
     }
     final avgDist = sumD / sampleCount;
-    // 0.0 -> 1.0, 0.5 -> 0.0（0.5 是畫布對角線的一半，夠差了）
     final shapeMatch = (1.0 - (avgDist / 0.5)).clamp(0.0, 1.0).toDouble();
 
-    final overall = (startMatch * 20 +
-            endMatch * 20 +
-            directionMatch * 25 +
-            shapeMatch * 35)
+    final overall = (startMatch * 18 +
+            endMatch * 18 +
+            directionMatch * 10 +
+            pathTangentMatch * 27 +
+            shapeMatch * 27)
         .clamp(0.0, 100.0)
         .toDouble();
 
@@ -153,6 +163,7 @@ class StrokeMatcher {
       startMatch: startMatch,
       endMatch: endMatch,
       directionMatch: directionMatch,
+      pathTangentMatch: pathTangentMatch,
       shapeMatch: shapeMatch,
     );
   }
@@ -200,6 +211,7 @@ class StrokeMatcher {
       startMatch: 0.5,
       endMatch: 0.5,
       directionMatch: 0.5,
+      pathTangentMatch: 0.5,
       shapeMatch: 0.5,
     );
     return CharacterScore(
@@ -262,5 +274,25 @@ class StrokeMatcher {
     final m = v.distance;
     if (m == 0) return Offset.zero;
     return Offset(v.dx / m, v.dy / m);
+  }
+
+  /// 兩條已對齊取樣的曲線，逐段切線方向餘弦平均（映射到 0..1）。
+  double _averageTangentAlignment(List<Offset> u, List<Offset> r) {
+    if (u.length < 3 || r.length < 3) return 0.5;
+    final n = min(u.length, r.length);
+    double sum = 0;
+    var count = 0;
+    for (var i = 1; i < n; i++) {
+      final ut = u[i] - u[i - 1];
+      final rt = r[i] - r[i - 1];
+      if (ut.distance < 1e-6 || rt.distance < 1e-6) continue;
+      final nu = _normalize2(ut);
+      final nr = _normalize2(rt);
+      final cos = (nu.dx * nr.dx + nu.dy * nr.dy).clamp(-1.0, 1.0);
+      sum += (cos + 1) / 2;
+      count++;
+    }
+    if (count == 0) return 0.5;
+    return (sum / count).clamp(0.0, 1.0).toDouble();
   }
 }

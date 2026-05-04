@@ -80,7 +80,10 @@ class CurriculumController extends Controller
         $lesson = Lesson::with([
             'subject:id,code,name',
             'vocabularyItems',
-            'questions' => fn ($q) => $q->where('is_published', true)->orderBy('sort'),
+            'questions' => fn ($q) => $q
+                ->where('is_published', true)
+                ->where('approval_status', Question::APPROVAL_APPROVED)
+                ->orderBy('sort'),
         ])
             ->where('code', $code)
             ->where('is_published', true)
@@ -100,7 +103,8 @@ class CurriculumController extends Controller
     {
         $query = Question::query()
             ->with(['subject:id,code,name'])
-            ->where('is_published', true);
+            ->where('is_published', true)
+            ->where('approval_status', Question::APPROVAL_APPROVED);
 
         if (! $request->boolean('include_premium', false)) {
             $query->where('is_premium', false);
@@ -146,6 +150,7 @@ class CurriculumController extends Controller
             ->orderBy('grade')
             ->get();
         $questions = Question::where('is_published', true)
+            ->where('approval_status', Question::APPROVAL_APPROVED)
             ->where('is_premium', false)
             ->get();
 
