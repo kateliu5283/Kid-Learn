@@ -10,12 +10,29 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin 帳號 (Filament)
+        // 後台帳號（依 role 進入 /admin、/teacher、/parent）
         User::updateOrCreate(
             ['email' => 'admin@kidlearn.local'],
             [
                 'name' => '系統管理員',
                 'password' => Hash::make('password'),
+                'role' => User::ROLE_ADMIN,
+            ]
+        );
+        User::updateOrCreate(
+            ['email' => 'teacher@kidlearn.local'],
+            [
+                'name' => '示範教師',
+                'password' => Hash::make('password'),
+                'role' => User::ROLE_TEACHER,
+            ]
+        );
+        User::updateOrCreate(
+            ['email' => 'parent@kidlearn.local'],
+            [
+                'name' => '示範家長',
+                'password' => Hash::make('password'),
+                'role' => User::ROLE_PARENT,
             ]
         );
 

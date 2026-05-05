@@ -9,7 +9,9 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class LessonResource extends Resource
 {
@@ -101,10 +103,13 @@ class LessonResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('subject.name')->label('學科')->badge()->sortable(),
-                Tables\Columns\TextColumn::make('grade')->label('年級')->formatStateUsing(fn($state) => "{$state} 年級")->sortable(),
+                Tables\Columns\TextColumn::make('grade')
+                    ->label('年級')
+                    ->formatStateUsing(fn ($state): string => "{$state} 年級")
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('semester')
                     ->label('學期')
-                    ->formatStateUsing(fn($state) => $state === 'first' ? '上' : ($state === 'second' ? '下' : '-')),
+                    ->formatStateUsing(fn ($state): string => $state === 'first' ? '上' : ($state === 'second' ? '下' : '—')),
                 Tables\Columns\TextColumn::make('unit')->label('單元'),
                 Tables\Columns\TextColumn::make('title')->label('單元名稱')->searchable()->limit(30),
                 Tables\Columns\TextColumn::make('questions_count')
@@ -120,16 +125,49 @@ class LessonResource extends Resource
                     ->falseIcon('heroicon-o-lock-open')
                     ->trueColor('warning'),
             ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('subject_id')
-                    ->label('學科')
-                    ->relationship('subject', 'name'),
-                Tables\Filters\SelectFilter::make('grade')
-                    ->label('年級')
-                    ->options([1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5', 6 => '6']),
-                Tables\Filters\TernaryFilter::make('is_published')->label('已發佈'),
-                Tables\Filters\TernaryFilter::make('is_premium')->label('付費單元'),
-            ])
+            ->filters(
+                [
+                    Tables\Filters\SelectFilter::make('subject_id')
+                        ->label('學科')
+                        ->relationship(
+                            'subject',
+                            'name',
+                            fn (Builder $query) => $query->orderBy('sort')
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->multiple(),
+                    Tables\Filters\SelectFilter::make('grade')
+                        ->label('年級')
+                        ->options([
+                            1 => '1 年級',
+                            2 => '2 年級',
+                            3 => '3 年級',
+                            4 => '4 年級',
+                            5 => '5 年級',
+                            6 => '6 年級',
+                        ])
+                        ->multiple(),
+                    Tables\Filters\SelectFilter::make('semester')
+                        ->label('學期')
+                        ->options([
+                            'first' => '上學期',
+                            'second' => '下學期',
+                        ]),
+                    Tables\Filters\SelectFilter::make('track')
+                        ->label('課綱軸')
+                        ->options([
+                            'core' => '課綱',
+                            'extended' => '素養',
+                            'general' => '一般',
+                        ]),
+                    Tables\Filters\TernaryFilter::make('is_published')->label('已發佈'),
+                    Tables\Filters\TernaryFilter::make('is_premium')->label('付費單元'),
+                ],
+                layout: FiltersLayout::AboveContent,
+            )
+            ->filtersFormColumns(3)
+            ->persistFiltersInSession()
             ->defaultSort('sort')
             ->actions([
                 Tables\Actions\EditAction::make(),

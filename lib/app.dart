@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/parent_auth_provider.dart';
 import 'providers/progress_provider.dart';
 import 'screens/splash_screen.dart';
 import 'services/remote_question_repository.dart';
@@ -13,6 +14,7 @@ class KidLearnApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProgressProvider()),
+        ChangeNotifierProvider(create: (_) => ParentAuthProvider()),
         Provider<RemoteQuestionRepository>(
           create: (_) => RemoteQuestionRepository()..warmUp(),
           dispose: (_, __) {},

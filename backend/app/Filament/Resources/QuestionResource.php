@@ -8,7 +8,9 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class QuestionResource extends Resource
 {
@@ -150,8 +152,14 @@ class QuestionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('subject.name')->label('學科')->badge(),
-                Tables\Columns\TextColumn::make('grade')->label('年級')->formatStateUsing(fn ($s) => "{$s} 年級"),
+                Tables\Columns\TextColumn::make('subject.name')
+                    ->label('學科')
+                    ->badge()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('grade')
+                    ->label('年級')
+                    ->formatStateUsing(fn ($state): string => "{$state} 年級")
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('prompt')
                     ->label('題幹')
                     ->limit(40)
@@ -159,22 +167,22 @@ class QuestionResource extends Resource
                     ->wrap(),
                 Tables\Columns\TextColumn::make('type')
                     ->label('題型')
-                    ->formatStateUsing(fn ($s) => match ($s) {
+                    ->formatStateUsing(fn ($state): string => match ($state) {
                         'multiple_choice' => '選擇',
                         'true_false' => '是非',
                         'fill_blank' => '填空',
-                        default => $s,
+                        default => (string) $state,
                     })
                     ->badge(),
                 Tables\Columns\TextColumn::make('difficulty')
                     ->label('難度')
-                    ->formatStateUsing(fn ($s) => match ($s) {
+                    ->formatStateUsing(fn ($state): string => match ($state) {
                         'easy' => '簡單',
                         'hard' => '困難',
                         default => '普通',
                     })
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
+                    ->color(fn ($state): string => match ($state) {
                         'easy' => 'success',
                         'hard' => 'danger',
                         default => 'gray',
@@ -209,32 +217,71 @@ class QuestionResource extends Resource
                     ->falseIcon('heroicon-o-lock-open')
                     ->trueColor('warning'),
             ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('subject_id')
-                    ->label('學科')
-                    ->relationship('subject', 'name'),
-                Tables\Filters\SelectFilter::make('grade')
-                    ->label('年級')
-                    ->options([1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5', 6 => '6']),
-                Tables\Filters\SelectFilter::make('difficulty')
-                    ->label('難度')
-                    ->options(['easy' => '簡單', 'normal' => '普通', 'hard' => '困難']),
-                Tables\Filters\TernaryFilter::make('is_published')->label('已發佈'),
-                Tables\Filters\TernaryFilter::make('is_premium')->label('付費題目'),
-                Tables\Filters\SelectFilter::make('source')
-                    ->label('來源')
-                    ->options([
-                        Question::SOURCE_MANUAL => '手動',
-                        Question::SOURCE_AI => 'AI',
-                    ]),
-                Tables\Filters\SelectFilter::make('approval_status')
-                    ->label('審核')
-                    ->options([
-                        Question::APPROVAL_PENDING => '待審核',
-                        Question::APPROVAL_APPROVED => '已通過',
-                        Question::APPROVAL_REJECTED => '已駁回',
-                    ]),
-            ])
+            ->filters(
+                [
+                    Tables\Filters\SelectFilter::make('subject_id')
+                        ->label('學科')
+                        ->relationship(
+                            'subject',
+                            'name',
+                            fn (Builder $query) => $query->orderBy('sort')
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->multiple(),
+                    Tables\Filters\SelectFilter::make('grade')
+                        ->label('年級')
+                        ->options([
+                            1 => '1 年級',
+                            2 => '2 年級',
+                            3 => '3 年級',
+                            4 => '4 年級',
+                            5 => '5 年級',
+                            6 => '6 年級',
+                        ])
+                        ->multiple(),
+                    Tables\Filters\SelectFilter::make('lesson_id')
+                        ->label('所屬課程')
+                        ->relationship(
+                            'lesson',
+                            'title',
+                            fn (Builder $query) => $query->orderBy('title')
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->multiple(),
+                    Tables\Filters\TernaryFilter::make('lesson_binding')
+                        ->label('課程綁定')
+                        ->placeholder('全部')
+                        ->trueLabel('已綁定課程')
+                        ->falseLabel('延伸題庫')
+                        ->queries(
+                            fn (Builder $query, array $data): Builder => $query->whereNotNull('lesson_id'),
+                            fn (Builder $query, array $data): Builder => $query->whereNull('lesson_id'),
+                        ),
+                    Tables\Filters\SelectFilter::make('difficulty')
+                        ->label('難度')
+                        ->options(['easy' => '簡單', 'normal' => '普通', 'hard' => '困難']),
+                    Tables\Filters\TernaryFilter::make('is_published')->label('已發佈'),
+                    Tables\Filters\TernaryFilter::make('is_premium')->label('付費題目'),
+                    Tables\Filters\SelectFilter::make('source')
+                        ->label('來源')
+                        ->options([
+                            Question::SOURCE_MANUAL => '手動',
+                            Question::SOURCE_AI => 'AI',
+                        ]),
+                    Tables\Filters\SelectFilter::make('approval_status')
+                        ->label('審核')
+                        ->options([
+                            Question::APPROVAL_PENDING => '待審核',
+                            Question::APPROVAL_APPROVED => '已通過',
+                            Question::APPROVAL_REJECTED => '已駁回',
+                        ]),
+                ],
+                layout: FiltersLayout::AboveContent,
+            )
+            ->filtersFormColumns(3)
+            ->persistFiltersInSession()
             ->defaultSort('id', 'desc')
             ->actions([
                 Tables\Actions\Action::make('approve')

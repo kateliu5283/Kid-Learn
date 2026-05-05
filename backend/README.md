@@ -93,13 +93,17 @@ DB_PASSWORD=         # ← 填你的 MySQL 密碼
 php artisan migrate:fresh --seed
 ```
 
-這會建立資料表，並種入 **6 個學科、示範課程（含與 App 同步的小一自然 11 單元）、380+ 題題目**（另含約 30 題綁定小一自然各課）以及一個 admin 帳號：
+這會建立資料表，並種入 **6 個學科、示範課程（含與 App 同步的小一自然 11 單元）、380+ 題題目**（另含約 30 題綁定小一自然各課）以及 **三種角色的示範帳號**（管理者／教師／家長，見下表）：
 
 **與 Flutter 課程同步（小一自然）**：請維護 `database/data/science_g1_sync.php`，並與專案根目錄 `lib/curriculum/science/science_g1_lessons.dart` 對齊（`code` = App 的 `Lesson.id`）。變更後執行 `php artisan db:seed --class=ScienceG1CurriculumSeeder` 或整體 `migrate:fresh --seed`。
 
-| 帳號                       | 密碼       |
-| -------------------------- | ---------- |
-| `admin@kidlearn.local`     | `password` |
+| 帳號                       | 密碼       | 角色   | 登入網址（本機範例） |
+| -------------------------- | ---------- | ------ | -------------------- |
+| `admin@kidlearn.local`     | `password` | 管理者 | `/admin`             |
+| `teacher@kidlearn.local`   | `password` | 教師   | `/teacher`           |
+| `parent@kidlearn.local`    | `password` | 家長   | `/parent`            |
+
+`users.role` 為 `admin` / `teacher` / `parent`，各面板僅允許對應角色進入。管理者儀表板會顯示帳號數量統計；付費與訂閱需另接金流後再串資料表。教師／家長儀表板預留學習狀態區塊（目前 App 進度多在裝置本機，雲端學習紀錄 API 尚未實作）。
 
 ### 3. 啟動開發伺服器
 
@@ -109,8 +113,12 @@ php artisan serve
 
 Server 預設跑在 <http://127.0.0.1:8000>。
 
-- 後台（Filament）： <http://127.0.0.1:8000/admin>
+- **管理者**（課程／題庫 CRUD）： <http://127.0.0.1:8000/admin>
+- **教師後台**： <http://127.0.0.1:8000/teacher>
+- **家長後台**： <http://127.0.0.1:8000/parent>
 - API 健康檢查： <http://127.0.0.1:8000/api/v1/ping>
+
+若開 `/parent` 或 `/teacher` 曾出現 **403**：多半是同一瀏覽器已在 `/admin` 以**管理者**登入（共用 `web` session）。請先從管理者後台登出，或改用無痕視窗，再以 `parent@kidlearn.local`／`teacher@kidlearn.local` 登入（密碼見上方帳號表）。程式已加上中介層，會自動登出錯誤角色並帶到該面板的登入頁，避免只看到 403。
 
 ## API 清單（Gateway `/api/v1`）
 
@@ -123,6 +131,17 @@ Server 預設跑在 <http://127.0.0.1:8000>。
 | GET | `/content/lessons/{code}` | 單一課程詳情（含題目 + 字詞） |
 | GET | `/content/questions` | 題目列表（`?subject=math&grade=2&random=1&limit=10`） |
 | GET | `/content/snapshot` | 快照（學科、課程、免費題）供 Flutter 快取 |
+
+### User（App 家長帳號，Sanctum Bearer）
+
+僅建立／登入 **`role=parent`** 的帳號；教師與管理者請用 Filament 網頁登入。題庫 API 仍 **不需** 帶 Token。
+
+| Method | 路徑 | 說明 |
+| ------ | ---- | ---- |
+| POST | `/user/register` | 註冊（JSON：`name`, `email`, `password`, `password_confirmation`） |
+| POST | `/user/login` | 登入（`email`, `password`）→ 回傳 `data.token` |
+| POST | `/user/logout` | 登出（Header：`Authorization: Bearer {token}`） |
+| GET | `/user/me` | 目前使用者（需 Bearer） |
 
 ### 其他模組（預留）
 
@@ -144,6 +163,9 @@ curl "http://127.0.0.1:8000/api/v1/content/questions?subject=math&grade=1&random
 ```
 
 ## 管理後台操作
+
+- **管理者**（`/admin`）：學科、課程單元、題目等內容維護；儀表板有帳號角色數量與付費／訂閱佔位說明。
+- **教師**（`/teacher`）、**家長**（`/parent`）：目前為獨立 Filament 面板與儀表板說明區塊；待學習紀錄 API 與學生／綁定模型上線後，可改為圖表與列表。
 
 登入 <http://127.0.0.1:8000/admin> 後，左側會有：
 
@@ -173,6 +195,10 @@ curl "http://127.0.0.1:8000/api/v1/content/questions?subject=math&grade=1&random
 
 ### `vocabulary_items`
 - `lesson_id`, `term`, `meaning`, `example`, `sort`
+
+### `users`（後台登入 + App 家長）
+- `role`：`admin`（/admin）／`teacher`（/teacher）／`parent`（/parent 與 App 家長註冊）
+- App 登入使用 Sanctum：`personal_access_tokens` 表
 
 ## 未來擴充
 

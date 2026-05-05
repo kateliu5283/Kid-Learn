@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Content\CurriculumController;
 use App\Http\Controllers\Api\V1\ModuleStatusController;
+use App\Http\Controllers\Api\V1\User\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +29,16 @@ Route::prefix('v1')->group(function () {
         Route::get('lessons/{code}', [CurriculumController::class, 'lesson']);
         Route::get('questions', [CurriculumController::class, 'questions']);
         Route::get('snapshot', [CurriculumController::class, 'snapshot']);
+    });
+
+    // —— User（App 家長帳號）——
+    Route::middleware('throttle:12,1')->group(function () {
+        Route::post('user/register', [AuthController::class, 'register']);
+        Route::post('user/login', [AuthController::class, 'login']);
+    });
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        Route::post('user/logout', [AuthController::class, 'logout']);
+        Route::get('user/me', [AuthController::class, 'me']);
     });
 
     // —— 其餘模組（預留）——
