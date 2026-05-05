@@ -8,6 +8,7 @@
 ///  - Web：`http://127.0.0.1:8000/api/v1`
 ///
 /// 啟動 Laravel：`cd backend && php artisan serve`
+/// （埠號若非 8000，請用 `--dart-define=API_BASE_URL=...` 指向正確的 `/api/v1`。）
 class ApiConfig {
   ApiConfig._();
 

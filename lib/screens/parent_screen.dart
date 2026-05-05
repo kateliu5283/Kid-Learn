@@ -320,7 +320,7 @@ class ParentScreen extends StatelessWidget {
   }
 }
 
-/// 雲端家長帳號（後端 `users.role=parent`）；孩子暱稱仍只存本機。
+/// 雲端家長帳號（後端 `users.role=parent`）；註冊時可選將本機孩子基本資料同步至後端。
 class _ParentCloudAccountCard extends StatefulWidget {
   const _ParentCloudAccountCard();
 
@@ -336,6 +336,8 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
   final _pw2Ctrl = TextEditingController();
   bool _registerMode = false;
   bool _busy = false;
+  /// 註冊時一併上傳本機「孩子檔」（不含訪客預設檔）。
+  bool _syncLocalProfilesOnRegister = true;
 
   @override
   void dispose() {
@@ -376,7 +378,7 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
               ),
               const SizedBox(height: 4),
               const Text(
-                '題庫仍會從後端自動更新；孩子暱稱與學習進度維持在本機。',
+                '題庫仍會從後端自動更新；學習進度在本機。若註冊時已上傳孩子基本資料，後台與教師可對應雲端學生（家教／小班）。',
                 style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
               ),
               const SizedBox(height: 12),
@@ -405,6 +407,10 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
       );
     }
 
+    final localKids = context.watch<ProgressProvider>().profiles
+        .where((p) => p.id != 'guest')
+        .toList();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -417,7 +423,7 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
             ),
             const SizedBox(height: 4),
             const Text(
-              '註冊後可與網頁家長後台使用同一帳號；孩子暱稱仍只存在此手機。',
+              '註冊後可與網頁家長後台使用同一帳號。註冊時可選上傳本機孩子；登入時會自動比對雲端，將本機有而雲端尚無對應（依本機 id）的孩子補上，方便多支手機分開建立檔案後合併。',
               style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
             ),
             const SizedBox(height: 12),
@@ -484,6 +490,20 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              if (localKids.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('註冊時上傳本機孩子至雲端'),
+                  subtitle: Text(
+                    '共 ${localKids.length} 位：${localKids.map((p) => p.name).join('、')}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  value: _syncLocalProfilesOnRegister,
+                  onChanged: (v) =>
+                      setState(() => _syncLocalProfilesOnRegister = v),
+                ),
+              ],
             ],
             if (auth.lastError != null) ...[
               const SizedBox(height: 8),
@@ -508,19 +528,40 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
 
   Future<void> _submit(BuildContext context) async {
     final auth = context.read<ParentAuthProvider>();
+    final localPayload = context
+        .read<ProgressProvider>()
+        .profiles
+        .where((p) => p.id != 'guest')
+        .map(
+          (p) => <String, dynamic>{
+            'name': p.name,
+            'grade': p.grade,
+            'avatar': p.avatar,
+            'device_local_id': p.id,
+          },
+        )
+        .toList();
     setState(() => _busy = true);
     bool ok;
     if (_registerMode) {
+      List<Map<String, dynamic>>? students;
+      if (_syncLocalProfilesOnRegister) {
+        students = localPayload.isEmpty ? null : localPayload;
+      }
       ok = await auth.register(
         name: _nameCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         password: _pwCtrl.text,
         passwordConfirmation: _pw2Ctrl.text,
+        students: students,
+        localProfilesForMergeAfterAuth:
+            _syncLocalProfilesOnRegister ? localPayload : null,
       );
     } else {
       ok = await auth.login(
         email: _emailCtrl.text.trim(),
         password: _pwCtrl.text,
+        localProfilesForMergeAfterAuth: localPayload,
       );
     }
     if (!context.mounted) return;

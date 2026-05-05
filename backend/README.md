@@ -138,10 +138,14 @@ Server 預設跑在 <http://127.0.0.1:8000>。
 
 | Method | 路徑 | 說明 |
 | ------ | ---- | ---- |
-| POST | `/user/register` | 註冊（JSON：`name`, `email`, `password`, `password_confirmation`） |
-| POST | `/user/login` | 登入（`email`, `password`）→ 回傳 `data.token` |
-| POST | `/user/logout` | 登出（Header：`Authorization: Bearer {token}`） |
-| GET | `/user/me` | 目前使用者（需 Bearer） |
+| POST | `/user/register` | 註冊（`name`, `email`, `password`, `password_confirmation`；選填 **`students`** 陣列最多 20 筆：`name`, `grade`, `avatar`, `device_local_id`） |
+| POST | `/user/login` | 登入 → 回傳 `data.token` 與 **`data.students`**（雲端學生列表） |
+| POST | `/user/logout` | 登出（需 Bearer） |
+| GET | `/user/me` | 目前使用者 + **`students`**（需 Bearer） |
+| GET | `/user/students` | 列出該家長的雲端學生 |
+| POST | `/user/students` | 新增一筆學生 |
+| PUT | `/user/students/{id}` | 更新學生（僅本人子女） |
+| DELETE | `/user/students/{id}` | 刪除學生（僅本人子女） |
 
 ### 其他模組（預留）
 
@@ -169,6 +173,9 @@ curl "http://127.0.0.1:8000/api/v1/content/questions?subject=math&grade=1&random
 
 登入 <http://127.0.0.1:8000/admin> 後，左側會有：
 
+- **帳號**（新）：列出所有 `users`（管理者／教師／家長），可依角色篩選、搜尋 Email／姓名；App 註冊的家長也會出現在此。
+- **學生（雲端）**：`students` 資料，可篩選家長；對應 App 上傳的孩子與本機 `device_local_id`。
+- **教師帶領（家教／小班）**：維護 `teacher_student`（某位教師帶哪些學生，可填備註）。
 - **學科**：6 個預設學科，可改名字、顏色、圖示。
 - **課程單元**：課程總覽，打開任何一課可以直接在頁面下方 **同時編輯** 該課的題目與關鍵字詞（Relation Manager）。
 - **題目**：所有題目總覽，可依學科／年級／難度／發佈狀態過濾，支援批次發佈／下架。
@@ -199,6 +206,15 @@ curl "http://127.0.0.1:8000/api/v1/content/questions?subject=math&grade=1&random
 ### `users`（後台登入 + App 家長）
 - `role`：`admin`（/admin）／`teacher`（/teacher）／`parent`（/parent 與 App 家長註冊）
 - App 登入使用 Sanctum：`personal_access_tokens` 表
+
+### `students`（雲端學生）
+- `parent_user_id` → `users`（家長）
+- `name`, `grade`, `avatar`, `device_local_id`（對應 App 本機 profile `id`）, `sort`
+
+### `teacher_student`（家教／小班）
+- `teacher_user_id` → `users`（須為教師）
+- `student_id` → `students`（cascade 刪除）
+- `note` 備註；同一教師+學生唯一
 
 ## 未來擴充
 

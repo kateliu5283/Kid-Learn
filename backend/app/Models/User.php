@@ -7,6 +7,8 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -65,5 +67,23 @@ class User extends Authenticatable implements FilamentUser
             'parent' => $this->role === self::ROLE_PARENT,
             default => false,
         };
+    }
+
+    /** @return HasMany<Student, $this> */
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class, 'parent_user_id')->orderBy('sort');
+    }
+
+    /**
+     * 家教／小班：此教師帶領的學生。
+     *
+     * @return BelongsToMany<Student, $this>
+     */
+    public function taughtStudents(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'teacher_student', 'teacher_user_id', 'student_id')
+            ->withPivot('note')
+            ->withTimestamps();
     }
 }

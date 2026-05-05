@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Content\CurriculumController;
 use App\Http\Controllers\Api\V1\ModuleStatusController;
 use App\Http\Controllers\Api\V1\User\AuthController;
+use App\Http\Controllers\Api\V1\User\StudentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,6 +40,10 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('user/me', [AuthController::class, 'me']);
+        Route::get('user/students', [StudentController::class, 'index']);
+        Route::post('user/students', [StudentController::class, 'store']);
+        Route::put('user/students/{student}', [StudentController::class, 'update']);
+        Route::delete('user/students/{student}', [StudentController::class, 'destroy']);
     });
 
     // —— 其餘模組（預留）——

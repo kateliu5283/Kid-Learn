@@ -201,7 +201,7 @@ php artisan serve                                  # http://127.0.0.1:8000
 - 預設帳號：`admin@kidlearn.local`
 - 預設密碼：`password`
 
-Flutter 連後端時的 BaseUrl（在 `lib/services/api_config.dart`）：
+Flutter 連後端時的 BaseUrl（在 `lib/services/api_config.dart`，含 **題庫** 與 **家長註冊／登入**）：
 
 | 環境           | URL                                  |
 | -------------- | ------------------------------------ |
@@ -209,10 +209,18 @@ Flutter 連後端時的 BaseUrl（在 `lib/services/api_config.dart`）：
 | Android 模擬器 | `http://10.0.2.2:8000/api/v1`        |
 | 實機           | `http://<電腦內網 IP>:8000/api/v1`   |
 
+若後端使用 **`php artisan serve --port=8001`**，請把上面埠改成 **8001**（否則請求會打到錯的埠，常出現 **404**）。
+
 也可以用編譯參數指定：
 
 ```bash
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
+```
+
+Web 且後端在 8001 時：
+
+```bash
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8001/api/v1
 ```
 
 更多後端說明見 [`backend/README.md`](backend/README.md)。**API 模組分區**見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
