@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/learning_record_sync.dart';
+import '../../services/learning_records_api.dart' show LearningActivityTypes;
+
 enum _RainLevel {
   easy('簡單', 2.0, Duration(seconds: 4)),
   normal('中等', 1.5, Duration(seconds: 3)),
@@ -290,6 +293,18 @@ class _WordRainGameState extends State<WordRainGame> {
 
   void _finish() {
     setState(() => _done = true);
+    final q = _score < 1 ? 1 : _score;
+    LearningRecordSync.trySubmit(
+      context,
+      activityType: LearningActivityTypes.gameWordRain,
+      title: '單字雨（${widget.level.label}）',
+      correctCount: _score,
+      questionCount: q,
+      meta: {
+        'level': widget.level.name,
+        'lives_end': _lives,
+      },
+    );
   }
 
   @override

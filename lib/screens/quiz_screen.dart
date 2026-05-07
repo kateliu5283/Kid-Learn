@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../curriculum/curriculum.dart';
 import '../models/lesson.dart';
 import '../providers/progress_provider.dart';
+import '../services/learning_record_sync.dart';
+import '../services/learning_records_api.dart' show LearningActivityTypes;
 import '../theme/app_theme.dart';
 import '../widgets/kid_button.dart';
 
@@ -240,6 +242,16 @@ class _QuizScreenState extends State<QuizScreen> {
           score: _score,
           total: widget.lesson.questions.length,
         );
+    if (!mounted) return;
+    final total = widget.lesson.questions.length;
+    await LearningRecordSync.trySubmit(
+      context,
+      activityType: LearningActivityTypes.lessonQuiz,
+      contextKey: widget.lesson.id,
+      title: widget.lesson.title,
+      correctCount: _score,
+      questionCount: total,
+    );
     if (!mounted) return;
     setState(() => _showResult = true);
     _confetti.play();

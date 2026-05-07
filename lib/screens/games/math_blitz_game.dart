@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/learning_record_sync.dart';
+import '../../services/learning_records_api.dart' show LearningActivityTypes;
+
 enum _MathMode {
   add('加法', Icons.add),
   sub('減法', Icons.remove),
@@ -295,6 +298,20 @@ class _MathBlitzGameState extends State<MathBlitzGame> {
     _timer?.cancel();
     setState(() => _done = true);
     if (_score >= 10) _confetti.play();
+    final total = _score + _wrong;
+    LearningRecordSync.trySubmit(
+      context,
+      activityType: LearningActivityTypes.gameMathBlitz,
+      title: '數學快閃（${widget.mode.label}／${widget.level.label}）',
+      correctCount: _score,
+      questionCount: total > 0 ? total : _score,
+      durationSeconds: 60,
+      meta: {
+        'mode': widget.mode.name,
+        'level': widget.level.name,
+        'best_combo': _bestCombo,
+      },
+    );
   }
 
   @override

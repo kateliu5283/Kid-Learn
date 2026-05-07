@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Content\CurriculumController;
+use App\Http\Controllers\Api\V1\Learning\LearningRecordController;
 use App\Http\Controllers\Api\V1\ModuleStatusController;
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\StudentController;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 | 依業務模組分區（與 docs/ARCHITECTURE.md 一致）：
 |   content   — 題庫／課程（核心）
 |   user      — 使用者（預留）
-|   learning  — 學習紀錄／進度（預留）
+|   learning  — 學習紀錄（App POST /learning/records；家長 token）
 |   missions  — 任務（預留）
 |   analytics — 分析（預留）
 |
@@ -44,6 +45,7 @@ Route::prefix('v1')->group(function () {
         Route::post('user/students', [StudentController::class, 'store']);
         Route::put('user/students/{student}', [StudentController::class, 'update']);
         Route::delete('user/students/{student}', [StudentController::class, 'destroy']);
+        Route::post('learning/records', [LearningRecordController::class, 'store']);
     });
 
     // —— 其餘模組（預留）——

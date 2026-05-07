@@ -6,6 +6,8 @@ import '../../curriculum/curriculum.dart';
 import '../../models/lesson.dart';
 import '../../models/question.dart';
 import '../../providers/progress_provider.dart';
+import '../../services/learning_record_sync.dart';
+import '../../services/learning_records_api.dart' show LearningActivityTypes;
 import '../../services/remote_question_repository.dart';
 import '../../widgets/kid_button.dart';
 
@@ -145,6 +147,29 @@ class _ReviewScreenState extends State<ReviewScreen> {
               score: _score,
               total: _questions.length,
             );
+        if (!mounted) return;
+        await LearningRecordSync.trySubmit(
+          context,
+          activityType: LearningActivityTypes.lessonReview,
+          contextKey: widget.lesson!.id,
+          title: '複習：${widget.lesson!.title}',
+          correctCount: _score,
+          questionCount: _questions.length,
+        );
+      } else {
+        final progress = context.read<ProgressProvider>();
+        final grade = widget.grade ?? progress.profile.grade;
+        await LearningRecordSync.trySubmit(
+          context,
+          activityType: LearningActivityTypes.dailyReview,
+          contextKey: widget.subjectId,
+          title: widget.subjectId != null
+              ? '每日複習（${widget.subjectId}）'
+              : '每日複習',
+          correctCount: _score,
+          questionCount: _questions.length,
+          meta: {'grade': grade},
+        );
       }
     }
   }

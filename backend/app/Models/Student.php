@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
@@ -40,6 +41,12 @@ class Student extends Model
         return $this->belongsToMany(User::class, 'teacher_student', 'student_id', 'teacher_user_id')
             ->withPivot('note')
             ->withTimestamps();
+    }
+
+    /** @return HasMany<StudentLearningRecord, $this> */
+    public function learningRecords(): HasMany
+    {
+        return $this->hasMany(StudentLearningRecord::class)->orderByDesc('recorded_at');
     }
 
     public function toApiArray(): array

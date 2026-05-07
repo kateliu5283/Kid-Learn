@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/learning_record_sync.dart';
+import '../../services/learning_records_api.dart' show LearningActivityTypes;
+
 enum _Topic {
   english('英語單字', Color(0xFF42A5F5)),
   math('數學算式', Color(0xFF66BB6A)),
@@ -288,6 +291,21 @@ class _MemoryMatchGameState extends State<MemoryMatchGame> {
   void _onWin() {
     _timer?.cancel();
     _confetti.play();
+    final pairs = widget.difficulty.pairs;
+    LearningRecordSync.trySubmit(
+      context,
+      activityType: LearningActivityTypes.gameMemoryMatch,
+      title: '記憶翻牌（${widget.topic.label}／${widget.difficulty.label}）',
+      correctCount: pairs,
+      questionCount: pairs,
+      durationSeconds: _seconds,
+      meta: {
+        'topic': widget.topic.name,
+        'difficulty': widget.difficulty.name,
+        'moves': _moves,
+        'pairs': pairs,
+      },
+    );
   }
 
   @override

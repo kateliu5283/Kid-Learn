@@ -35,6 +35,9 @@ class TeacherPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
+            ->resources([
+                \App\Filament\Teacher\Resources\StudentLearningRecordResource::class,
+            ])
             ->widgets([
                 Widgets\AccountWidget::class,
                 ProgressNoticeWidget::class,
