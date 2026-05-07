@@ -181,6 +181,64 @@ class ParentAuthApi {
     return CloudStudent.fromJson(data);
   }
 
+  /// 列出雲端學生（需家長 token）。
+  Future<List<CloudStudent>> listStudents(String token) async {
+    final res = await _client
+        .get(
+          _u('/user/students'),
+          headers: _headers(token),
+        )
+        .timeout(ApiConfig.timeout);
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法取得孩子清單（${res.statusCode}）');
+    }
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    final data = body['data'];
+    if (data is! List<dynamic>) {
+      return [];
+    }
+    return data
+        .map((e) => CloudStudent.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// 取得讓教師掃描加入的邀請網址（QR 內容）。`regenerate: true` 會作廢舊 QR。
+  Future<String> teacherInviteJoinUrl(
+    String token, {
+    required int studentId,
+    bool regenerate = false,
+  }) async {
+    final res = await _client
+        .post(
+          _u('/user/students/$studentId/teacher-invite'),
+          headers: _headers(token),
+          body: jsonEncode(<String, dynamic>{
+            if (regenerate) 'regenerate': true,
+          }),
+        )
+        .timeout(ApiConfig.timeout);
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode == 422 && jsonDecode(res.body) is Map<String, dynamic>) {
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      throw ParentAuthException(_firstValidationMessage(body) ?? '資料驗證失敗');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法產生邀請連結（${res.statusCode}）');
+    }
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>?;
+    final url = data?['join_url'] as String?;
+    if (url == null || url.isEmpty) {
+      throw ParentAuthException('回應缺少 join_url');
+    }
+    return url;
+  }
+
   Future<void> logout(String token) async {
     final res = await _client
         .post(

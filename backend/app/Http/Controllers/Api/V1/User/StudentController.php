@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * 家長名下學生（雲端實體）。教師透過 teacher_student 指派（後台 Filament）。
+ * 家長名下學生（雲端實體）。教師可經邀請連結加入，或由後台 Filament 指派 teacher_student。
  */
 class StudentController extends Controller
 {
@@ -88,6 +88,29 @@ class StudentController extends Controller
         $student->delete();
 
         return response()->json(['message' => 'ok']);
+    }
+
+    /**
+     * 取得（或重新產生）讓教師掃描加入的邀請連結。QR 內容應為回傳的 join_url。
+     */
+    public function teacherInvite(Request $request, Student $student): JsonResponse
+    {
+        $user = $this->requireParent($request);
+        $this->authorizeParentStudent($user, $student);
+
+        $data = $request->validate([
+            'regenerate' => ['sometimes', 'boolean'],
+        ]);
+
+        $regenerate = (bool) ($data['regenerate'] ?? false);
+        $student->ensureTeacherInviteToken($regenerate);
+        $student->refresh();
+
+        return response()->json([
+            'data' => [
+                'join_url' => $student->joinTeachingUrl(),
+            ],
+        ]);
     }
 
     protected function requireParent(Request $request): User

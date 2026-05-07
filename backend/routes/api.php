@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function () {
         Route::get('user/students', [StudentController::class, 'index']);
         Route::post('user/students', [StudentController::class, 'store']);
         Route::put('user/students/{student}', [StudentController::class, 'update']);
+        Route::post('user/students/{student}/teacher-invite', [StudentController::class, 'teacherInvite']);
         Route::delete('user/students/{student}', [StudentController::class, 'destroy']);
         Route::post('learning/records', [LearningRecordController::class, 'store']);
     });

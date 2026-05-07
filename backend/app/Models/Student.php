@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Student extends Model
 {
@@ -58,5 +59,19 @@ class Student extends Model
             'avatar' => $this->avatar,
             'device_local_id' => $this->device_local_id,
         ];
+    }
+
+    /** 產生或沿用邀請 token，供家長 QR 讓教師加入 teacher_student。 */
+    public function ensureTeacherInviteToken(bool $regenerate = false): void
+    {
+        if ($regenerate || blank($this->teacher_invite_token)) {
+            $this->teacher_invite_token = Str::random(48);
+            $this->save();
+        }
+    }
+
+    public function joinTeachingUrl(): string
+    {
+        return rtrim(config('app.url'), '/').'/join-teaching/'.$this->teacher_invite_token;
     }
 }

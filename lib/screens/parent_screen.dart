@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../curriculum/curriculum.dart';
 import '../providers/parent_auth_provider.dart';
 import '../providers/progress_provider.dart';
+import '../services/parent_auth_api.dart';
 import 'profile/profile_select_screen.dart';
 import 'profile/profile_edit_sheet.dart';
 
@@ -13,6 +15,7 @@ class ParentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressProvider>();
+    final auth = context.watch<ParentAuthProvider>();
     final profile = progress.profile;
 
     return SafeArea(
@@ -100,6 +103,28 @@ class ParentScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (auth.isSignedIn && profile.id != 'guest') ...[
+                    const SizedBox(height: 10),
+                    const Text(
+                      '若孩子已同步至雲端，可產生 QR 讓老師（教師後台帳號）掃描加入教學清單，方便檢視上傳的學習紀錄。',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.qr_code_2, size: 20),
+                      label: const Text('老師加入 QR'),
+                      onPressed: () => _openTeacherInviteQr(
+                        context,
+                        bearerToken: auth.token!,
+                        deviceLocalId: profile.id,
+                        childName: profile.name,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -315,6 +340,187 @@ class ParentScreen extends StatelessWidget {
         name: result.name,
         grade: result.grade,
         avatar: result.avatar,
+      ),
+    );
+  }
+
+  void _openTeacherInviteQr(
+    BuildContext context, {
+    required String bearerToken,
+    required String deviceLocalId,
+    required String childName,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 24,
+          bottom: MediaQuery.paddingOf(ctx).bottom + 24,
+        ),
+        child: _TeacherInviteQrSheet(
+          bearerToken: bearerToken,
+          deviceLocalId: deviceLocalId,
+          childName: childName,
+        ),
+      ),
+    );
+  }
+}
+
+class _TeacherInviteQrSheet extends StatefulWidget {
+  const _TeacherInviteQrSheet({
+    required this.bearerToken,
+    required this.deviceLocalId,
+    required this.childName,
+  });
+
+  final String bearerToken;
+  final String deviceLocalId;
+  final String childName;
+
+  @override
+  State<_TeacherInviteQrSheet> createState() => _TeacherInviteQrSheetState();
+}
+
+class _TeacherInviteQrSheetState extends State<_TeacherInviteQrSheet> {
+  final _api = ParentAuthApi();
+  bool _busy = true;
+  String? _error;
+  String? _joinUrl;
+  int? _cloudStudentId;
+
+  @override
+  void initState() {
+    super.initState();
+    _load(regenerate: false);
+  }
+
+  Future<void> _load({required bool regenerate}) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final list = await _api.listStudents(widget.bearerToken);
+      CloudStudent? match;
+      for (final s in list) {
+        if (s.deviceLocalId != null &&
+            s.deviceLocalId == widget.deviceLocalId) {
+          match = s;
+          break;
+        }
+      }
+      if (match == null) {
+        setState(() {
+          _busy = false;
+          _error =
+              '雲端尚無與此孩子對應的資料（本機 id：${widget.deviceLocalId}）。請先登入／註冊雲端家長帳號並同步孩子，或從「管理帳號」確認已上傳。';
+          _joinUrl = null;
+          _cloudStudentId = null;
+        });
+        return;
+      }
+      _cloudStudentId = match.id;
+      final url = await _api.teacherInviteJoinUrl(
+        widget.bearerToken,
+        studentId: match.id,
+        regenerate: regenerate,
+      );
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _joinUrl = url;
+      });
+    } on ParentAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = '無法載入，請確認網路與後端設定。';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '老師加入：${widget.childName}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '請老師用手機相機掃描 QR，會開啟網頁；以「教師」帳號登入後台後，此孩子會出現在教師的學習紀錄清單中。若 .env 的 APP_URL 無法從老師手機連到，請改為可連線的網址後再產生 QR。',
+            style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.45),
+          ),
+          const SizedBox(height: 20),
+          if (_busy)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_error != null) ...[
+            Text(
+              _error!,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => _load(regenerate: false),
+              child: const Text('重試'),
+            ),
+          ] else if (_joinUrl != null) ...[
+            Center(
+              child: QrImageView(
+                data: _joinUrl!,
+                version: QrVersions.auto,
+                size: 220,
+                backgroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(
+              _joinUrl!,
+              style: const TextStyle(fontSize: 11, height: 1.35),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _cloudStudentId == null
+                  ? null
+                  : () => _load(regenerate: true),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('重新產生連結（舊 QR 失效）'),
+            ),
+          ],
+        ],
       ),
     );
   }
