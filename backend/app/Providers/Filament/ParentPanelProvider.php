@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\ParentPortal\Widgets\ProgressNoticeWidget;
+use App\Http\Middleware\ForceAppUrlFromHttpRequest;
 use App\Http\Middleware\RedirectIfWrongFilamentPanel;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -41,6 +42,7 @@ class ParentPanelProvider extends PanelProvider
                 ProgressNoticeWidget::class,
             ])
             ->middleware([
+                ForceAppUrlFromHttpRequest::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

@@ -61,17 +61,23 @@ List<Lesson> buildMathUpperPrimaryLessons() {
 
   return [
     for (final s in specs)
-      lesson108Core(
-        id: 'ex-ma-${s.grade}-${s.semester}-${s.unit}',
-        subjectId: 'math',
-        grade: s.grade,
-        semester: s.semester == 1 ? Semester.first : Semester.second,
-        unit: s.unit,
-        title: s.title,
-        summary: s.summary,
-        content: '${s.content}\n\n${_semIntro(s.grade, s.semester)}\n重點：${s.summary}。',
-        questions: _mathQuestions(s),
-      ),
+      () {
+        final okv = _mathLearningBundle(s);
+        return lesson108Core(
+          id: 'ex-ma-${s.grade}-${s.semester}-${s.unit}',
+          subjectId: 'math',
+          grade: s.grade,
+          semester: s.semester == 1 ? Semester.first : Semester.second,
+          unit: s.unit,
+          title: s.title,
+          summary: s.summary,
+          content: '${s.content}\n\n${_semIntro(s.grade, s.semester)}\n重點：${s.summary}。',
+          objectives: okv.objectives,
+          keyPoints: okv.keyPoints,
+          vocabulary: okv.vocabulary,
+          questions: _mathQuestions(s),
+        );
+      }(),
   ];
 }
 
@@ -97,6 +103,105 @@ class _MathSpec {
   final String summary;
   final String content;
   final String kind;
+}
+
+({List<String> objectives, List<String> keyPoints, List<VocabItem> vocabulary})
+    _mathLearningBundle(_MathSpec s) {
+  final g = s.grade;
+  return (
+    objectives: [
+      '理解「${s.title}」的數學意義並能口頭說明要點',
+      '能依情境列式、計算並檢查答案的合理性',
+      '能將所學連結到生活中的量感、圖形或資料情境',
+    ],
+    keyPoints: [
+      '國小 $g 年級數學：${s.summary}',
+      '解題可先畫圖、估計或列表，再選擇策略',
+      '養成驗算、檢查單位與有效位數的習慣',
+    ],
+    vocabulary: _mathVocabularyFor(s.kind, s.title),
+  );
+}
+
+List<VocabItem> _mathVocabularyFor(String kind, String title) {
+  switch (kind) {
+    case 'frac':
+    case 'fracdiv':
+    case 'fracmix':
+      return [
+        VocabItem(term: '分子', meaning: '分數線上方的數', example: '3/5 的分子是 3'),
+        VocabItem(term: '分母', meaning: '分數線下方的數', example: '表示把整體平分幾份'),
+        VocabItem(term: '通分', meaning: '化成相同分母', example: '異分母加減前先通分'),
+      ];
+    case 'mul':
+    case 'mul2':
+    case 'muld':
+      return [
+        VocabItem(term: '乘法', meaning: '相同數連加的簡寫', example: '3×4＝4+4+4'),
+        VocabItem(term: '位值', meaning: '數字所在位置的值', example: '十位上的 3 代表 30'),
+        VocabItem(term: '積', meaning: '乘法算出的結果', example: '3×4＝12，12 是積'),
+      ];
+    case 'div':
+    case 'div2':
+    case 'divd':
+      return [
+        VocabItem(term: '被除數', meaning: '要被平分的總量', example: '12÷3 中的 12'),
+        VocabItem(term: '除數', meaning: '平均分成的份數或每份大小', example: '12÷3 中的 3'),
+        VocabItem(term: '餘數', meaning: '除不盡時剩下的量', example: '餘數要比除數小'),
+      ];
+    case 'area':
+      return [
+        VocabItem(term: '面積', meaning: '平面圖形佔地大小', example: '長方形面積＝長×寬'),
+        VocabItem(term: '平方公分', meaning: '面積常用單位', example: '寫成 cm²'),
+        VocabItem(term: '方格紙', meaning: '用格子幫助數面積', example: '每格代表 1 cm²'),
+      ];
+    case 'geo':
+    case 'solid':
+      return [
+        VocabItem(term: '角', meaning: '兩線段或射線張開的大小', example: '量角器量角'),
+        VocabItem(term: '直角', meaning: '90° 的角', example: '書本的角'),
+        VocabItem(term: '對邊', meaning: '長方形中互相平行的邊', example: '長為一組對邊'),
+      ];
+    case 'measure':
+      return [
+        VocabItem(term: '公升', meaning: '容量單位 L', example: '大瓶牛奶 1 L'),
+        VocabItem(term: '毫升', meaning: '比公升小的容量單位', example: '1000 mL＝1 L'),
+        VocabItem(term: '公斤', meaning: '常用重量單位', example: '1000 g＝1 kg'),
+      ];
+    case 'time':
+      return [
+        VocabItem(term: '時針', meaning: '指較短的針', example: '指在 3 和 4 之間為 3 時多'),
+        VocabItem(term: '分針', meaning: '指較長的針', example: '指 6 代表 30 分'),
+        VocabItem(term: '24 小時制', meaning: '一天以 0～24 時表示', example: '下午 2 時寫 14:00'),
+      ];
+    case 'data':
+      return [
+        VocabItem(term: '統計圖', meaning: '把資料畫成圖', example: '條形圖、折線圖'),
+        VocabItem(term: '平均數', meaning: '總和除以個數', example: '分數平均'),
+        VocabItem(term: '資料', meaning: '調查蒐集到的數字或類別', example: '全班身高'),
+      ];
+    case 'circle':
+      return [
+        VocabItem(term: '圓周長', meaning: '圍繞圓一圈的長度', example: '與直徑成比例'),
+        VocabItem(term: '半徑', meaning: '圓心到圓周的距離', example: 'r'),
+        VocabItem(term: '直徑', meaning: '過圓心的弦長', example: 'd＝2r'),
+      ];
+    case 'prop':
+    case 'ratio':
+      return [
+        VocabItem(term: '比', meaning: '兩數量的對應關係', example: '2：3'),
+        VocabItem(term: '比例式', meaning: '兩個比相等的等式', example: '2：3＝4：6'),
+        VocabItem(term: '百分率', meaning: '每一百分之幾', example: '50%'),
+      ];
+    case 'vol':
+      return [
+        VocabItem(term: '體積', meaning: '立體佔空間大小', example: '長方體體積＝長×寬×高'),
+        VocabItem(term: '立方公分', meaning: '體積單位 cm³', example: '小積木一格 1 cm³'),
+        VocabItem(term: '底面積', meaning: '柱體底面的面積', example: '體積＝底面積×高'),
+      ];
+    default:
+      return default108Vocabulary(title, subjectId: 'math');
+  }
 }
 
 List<Question> _mathQuestions(_MathSpec s) {

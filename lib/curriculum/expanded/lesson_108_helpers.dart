@@ -1,6 +1,25 @@
 import '../../models/lesson.dart';
 import '../../models/question.dart';
 
+/// 未另填 vocabulary 時，依單元標題產生三筆通用字詞卡（預習／複習畫面可用）。
+List<VocabItem> default108Vocabulary(String title, {String subjectId = ''}) {
+  final anchor = title.length > 18 ? title.substring(0, 18) : title;
+  final domain = switch (subjectId) {
+    'english' => '英語文',
+    'science' => '自然',
+    'social' => '社會',
+    'life' => '綜合活動',
+    'math' => '數學',
+    'chinese' => '國語文',
+    _ => '學習內容',
+  };
+  return [
+    VocabItem(term: anchor, meaning: '本單元主題詞', example: '對照課本目標與活動'),
+    VocabItem(term: domain, meaning: '本課所屬學習領域', example: '呼應 108 課綱素養導向'),
+    VocabItem(term: '學習單', meaning: '引導探究或練習的工作紙', example: '依題序完成並自我檢核'),
+  ];
+}
+
 /// 108 課綱擴充單元：共用簡短測驗（每單元 2 題選擇），避免重複撰寫數百份完全相同題型。
 List<Question> mcqPairFor108Unit({
   required String lessonId,
@@ -66,15 +85,17 @@ Lesson lesson108Core({
     estimatedMinutes: estimatedMinutes,
     objectives: objectives ??
         [
-          '理解「$title」的核心概念',
-          '能於生活或學習情境中辨識相關例子',
+          '理解「$title」的核心概念與關鍵詞彙',
+          '能於生活或學習情境中舉例並說明所學',
+          '能與同儕合作完成探究或發表並自我檢核',
         ],
     keyPoints: keyPoints ??
         [
-          '本單元對應國小${grade}年級課程綱要之學習內容',
-          '各版本教材用語可能不同，重點概念相通',
+          '本單元對應國小 $grade 年級課程綱要之學習內容',
+          '建議搭配圖表、實例與討論加深理解',
+          '整理筆記有助複習與遷移應用',
         ],
-    vocabulary: vocabulary ?? const [],
+    vocabulary: vocabulary ?? default108Vocabulary(title, subjectId: subjectId),
     questions: questions ?? mcqPairFor108Unit(lessonId: id, title: title, summary: summary),
   );
 }

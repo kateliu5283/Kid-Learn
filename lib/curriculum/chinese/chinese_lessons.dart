@@ -16,6 +16,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '上學了',
     summary: '認識聲母 ㄅㄆㄇㄈ',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '新學期開始，我要上學了！\n\n先來認識第一組聲母：\nㄅ 不 ㄆ 皮 ㄇ 毛 ㄈ 飛\n\n試著跟著老師一起念，找找看生活中有哪些字是用這些聲母開頭的。',
     estimatedMinutes: 10,
     questions: [
@@ -46,6 +61,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '我的家',
     summary: '認識聲母 ㄉㄊㄋㄌ',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '家是溫暖的地方。\n\nㄉ 弟 ㄊ 湯 ㄋ 奶 ㄌ 來\n\n家人：爸爸、媽媽、弟弟、姊姊。',
     questions: [
       Question(
@@ -73,6 +103,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '動物朋友',
     summary: '認識韻母 ㄚㄛㄜㄝ',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '動物園裡好熱鬧！\n\nㄚ 啊 ㄛ 喔 ㄜ 鵝 ㄝ 耶\n\n鴨、馬、鵝都在玩。',
     questions: [
       Question(
@@ -100,6 +145,21 @@ const List<Lesson> kChineseLessons = [
     unit: 4,
     title: '小小的我',
     summary: '結合韻母練習：ㄞㄟㄠㄡ',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '我會自己穿衣服、自己吃飯。\n\nㄞ 愛 ㄟ 飛 ㄠ 老 ㄡ 狗\n\n「小」＝ ㄒ＋ㄧ＋ㄠˇ',
     questions: [
       Question(
@@ -120,6 +180,21 @@ const List<Lesson> kChineseLessons = [
     unit: 5,
     title: '好朋友',
     summary: '識字：手、口、耳、目',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '我有一雙小小的手，可以寫字、畫畫。\n我有一個大大的口，可以唱歌、說話。\n我有兩個耳朵聽聲音，兩個眼睛看世界。\n\n【手】【口】【耳】【目】',
     questions: [
       Question(
@@ -248,6 +323,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '春天來了',
     summary: '描寫春天景色',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '春天來了，花兒開了，鳥兒叫了。\n草地綠綠的，蝴蝶飛呀飛。\n\n生字：春、花、鳥、草、飛',
     questions: [
       Question(
@@ -275,6 +365,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '我會自己做',
     summary: '自理生活小文章',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '我會自己穿衣服、自己刷牙、自己收玩具。\n長大了，我不再是小寶寶。\n\n生字：穿、刷、收、玩、寶',
     questions: [
       Question(
@@ -295,6 +400,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '雨下來了',
     summary: '認識標點符號與擬聲詞',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '滴答！滴答！雨下來了。\n我撐著小雨傘，慢慢地走。\n水窪裡的小魚兒，對著我微笑。\n\n驚嘆號「！」表示驚喜或情緒。',
     questions: [
       Question(
@@ -494,6 +614,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '我升上二年級',
     summary: '新學期的心情',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '暑假過完了，我升上二年級。\n學校裡有新老師、新同學，還有新的課本。\n我要更用心學習，幫助學弟學妹。\n\n生字：升、暑、課、用、幫',
     questions: [
       Question(
@@ -521,6 +656,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '有朋友真好',
     summary: '朋友之間的相處',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '下課時，我和小華一起跳繩；\n上課時，我和小明一起討論。\n有朋友真好，我們互相幫忙、互相分享。\n\n生字：繩、論、互、忙、享',
     questions: [
       Question(
@@ -541,6 +691,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '動物的家',
     summary: '動物棲息地介紹',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '鳥兒的家在樹上，那叫作鳥巢。\n魚兒的家在水裡，那叫作河流。\n蜜蜂住在蜂巢裡，小狗住在狗屋裡。\n每種動物都有自己舒適的家。\n\n生字：巢、流、蜂、屋、適',
     questions: [
       Question(
@@ -568,6 +733,21 @@ const List<Lesson> kChineseLessons = [
     unit: 4,
     title: '閱讀的樂趣',
     summary: '從書本認識世界',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '書是我的好朋友。\n翻開書本，我可以到山上看日出，\n到海邊聽浪花，到古時候看歷史。\n多閱讀，知識就像滾雪球，越滾越大。\n\n生字：翻、浪、歷、識、雪',
     questions: [
       Question(
@@ -693,6 +873,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '家的溫暖',
     summary: '家人的愛',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '爸爸為我撐傘，媽媽為我煮飯，\n哥哥陪我玩，姊姊教我寫字。\n家，是我溫暖的小窩。\n\n生字：撐、煮、陪、窩、暖',
     questions: [
       Question(
@@ -713,6 +908,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '大自然的色彩',
     summary: '描寫自然景色',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '藍藍的天空，白白的雲，\n綠綠的草地，紅紅的花朵。\n大自然是最棒的畫家，\n用顏色畫出美麗的世界。\n\n形容詞疊字：藍藍的、白白的、綠綠的',
     questions: [
       Question(
@@ -740,6 +950,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '端午節',
     summary: '認識傳統節慶',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '五月五，慶端午，\n家家戶戶包粽子。\n立雞蛋、賽龍舟，\n掛香包、避邪氣。\n\n端午節是為了紀念詩人屈原。',
     questions: [
       Question(
@@ -871,6 +1096,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '美麗的家園',
     summary: '描寫家鄉',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '我的家鄉有青翠的山巒，清澈的溪流。\n早晨，鳥兒在樹梢歌唱；\n傍晚，夕陽為大地披上金色的外衣。\n\n生字：翠、澈、梢、傍、披',
     questions: [
       Question(
@@ -892,6 +1132,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '中秋賞月',
     summary: '認識中秋節',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '中秋節是農曆八月十五，是團圓的日子。\n晚上，全家人圍坐一起賞月、吃月餅、吃柚子。\n月亮又大又圓，就像媽媽慈祥的臉。\n\n詞語：團圓、慈祥、柚子、月餅',
     questions: [
       Question(
@@ -919,6 +1174,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '烏鴉喝水',
     summary: '閱讀寓言故事',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '很久以前，有一隻口渴的烏鴉，找到一個瓶子。\n瓶子裡有水，但水太少，烏鴉的嘴喝不到。\n烏鴉靈機一動，把石頭一顆顆丟進瓶子，水位慢慢升高，終於喝到水了。\n\n道理：遇到困難要動腦思考，就能找到方法。',
     questions: [
       Question(
@@ -948,6 +1218,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '愛迪生的故事',
     summary: '認識發明家',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '愛迪生小時候喜歡問問題，大家都覺得他很奇怪。\n長大後，他不怕失敗，試了一千多次，終於發明了電燈。\n他說：「天才是一分的天分加上九十九分的努力。」\n\n從愛迪生的故事我們學到：成功來自不斷的努力。',
     questions: [
       Question(
@@ -975,6 +1260,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '圖書館之旅',
     summary: '認識圖書館與閱讀',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '今天老師帶我們參觀圖書館。\n一走進大門，書香撲鼻而來。\n書架上的書分類整齊：故事書、科學書、歷史書……\n只要用心翻閱，就能打開知識的大門。',
     questions: [
       Question(
@@ -996,6 +1296,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '螞蟻與蟋蟀',
     summary: '伊索寓言',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '夏天，蟋蟀每天唱歌玩耍，螞蟻努力搬運食物。\n冬天來了，蟋蟀沒東西吃，又冷又餓；\n螞蟻家裡溫暖，糧食也充足。\n\n教訓：今天的努力，是為了明天的生活。',
     questions: [
       Question(
@@ -1018,6 +1333,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '台灣走透透',
     summary: '認識台灣之美',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '台灣雖小，卻擁有高山、平原、海岸、溫泉等豐富地景。\n北部繁華、中部熱情、南部樸實、東部純淨。\n每個地方都有獨特的風土民情。\n\n修辭重點：排比句「北部繁華、中部熱情、南部樸實、東部純淨。」',
     questions: [
       Question(
@@ -1046,6 +1376,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '科學家的眼睛',
     summary: '培養觀察力',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '達爾文花了五年環遊世界，仔細觀察不同島嶼上的動物，\n才寫出《物種起源》。\n\n科學家的成就，來自三件事：\n① 好奇心　② 持續觀察　③ 勇於求證',
     questions: [
       Question(
@@ -1073,6 +1418,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '誠實的價值',
     summary: '品德故事：一諾千金',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '古時候有個人叫季布，答應別人的事一定做到。\n有句話說：「得黃金百斤，不如得季布一諾。」\n意思是：得到一百斤黃金，還不如季布一句承諾值錢。\n\n誠實和守信，比金錢更珍貴。',
     questions: [
       Question(
@@ -1095,6 +1455,21 @@ const List<Lesson> kChineseLessons = [
     unit: 1,
     title: '環保小尖兵',
     summary: '愛護地球從自己做起',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '地球只有一個，我們要好好愛護它。\n日常生活中可以做：\n• 隨手關燈、關水龍頭\n• 自備購物袋、水壺\n• 垃圾分類、資源回收\n• 節能減碳、多搭大眾運輸\n\n每個小動作，都在為地球減少一分負擔。',
     questions: [
       Question(
@@ -1122,6 +1497,21 @@ const List<Lesson> kChineseLessons = [
     unit: 2,
     title: '世界之旅',
     summary: '認識世界文化',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '巴黎的鐵塔高聳入雲，東京的櫻花嬌豔綻放，\n紐約的高樓比鄰而立，埃及的金字塔神祕古老。\n\n透過閱讀和旅行，我們能開闊視野、尊重不同文化。',
     questions: [
       Question(
@@ -1149,6 +1539,21 @@ const List<Lesson> kChineseLessons = [
     unit: 3,
     title: '母親的手',
     summary: '親情散文',
+    objectives: [
+      '能理解本單元課文或語料的重點，並正確朗讀',
+      '能辨識與運用相關字詞於簡單句子中',
+      '能口述或寫出一句與主題相關的完整語句',
+    ],
+    keyPoints: [
+      '閱讀時先掌握段落大意，再標示細節與生字',
+      '書寫時注意筆順、間架與標點',
+      '口語發表要語句完整、條理清楚',
+    ],
+    vocabulary: [
+      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
+      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
+      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+    ],
     content: '媽媽的手，不是細嫩柔軟的手，\n而是一雙粗糙、布滿皺紋的手。\n那雙手為我煮飯、洗衣、縫補衣裳，\n每一條皺紋，都是愛的痕跡。\n\n修辭：運用對比（不是…而是…）突顯主題。',
     questions: [
       Question(
