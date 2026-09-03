@@ -42,7 +42,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 14,
                 crossAxisSpacing: 14,
-                childAspectRatio: 1.05,
+                childAspectRatio: 0.92,
               ),
               itemBuilder: (context, i) {
                 final subject = kSubjects[i];
