@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'question.dart';
+import 'lesson_block.dart';
 
 /// 108 課綱學習主題軸（與各學科自行定義的主軸對應）。
 /// 用於分類與呈現，不綁定任何特定出版社教材。
@@ -59,8 +60,11 @@ class Lesson {
   /// 重點整理：上完課的摘要卡
   final List<String> keyPoints;
 
-  /// 關鍵字詞：國語用作生字、英語用作單字、數學用作名詞
+  /// 關鍵字詞：國語生字、英語單字；數學等科目不在 UI 顯示字詞卡
   final List<VocabItem> vocabulary;
+
+  /// 結構化圖文教學區塊；若為空則由 [content] 自動解析
+  final List<LessonBlock> teachingBlocks;
 
   const Lesson({
     required this.id,
@@ -77,6 +81,7 @@ class Lesson {
     this.objectives = const [],
     this.keyPoints = const [],
     this.vocabulary = const [],
+    this.teachingBlocks = const [],
   });
 
   /// 顯示用的課綱標籤：例如「108 課綱 · 一上 第 3 單元」

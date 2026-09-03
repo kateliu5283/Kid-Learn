@@ -1,4 +1,5 @@
 import '../../models/lesson.dart';
+import '../../services/topic_content_data.dart';
 import 'lesson_108_helpers.dart';
 
 /// 英語、自然（二～六年級）、社會、綜合：國小 1～6 年級、每學期 6 單元，對應 108 課綱常見主題軸（不依特定版本教科書）。
@@ -24,40 +25,6 @@ String _semContentIntro(int grade, Semester sem, String focus) {
       '實際用語可能因學校選用之教材版本而略有差異。';
 }
 
-({List<String> objectives, List<String> keyPoints, List<VocabItem> vocabulary})
-    _supLearningFocus({
-  required String subjectId,
-  required int grade,
-  required Semester semester,
-  required String title,
-}) {
-  final semLabel = semester == Semester.first ? '上學期' : '下學期';
-  final domain = switch (subjectId) {
-    'english' => '英語文',
-    'science' => '自然科學',
-    'social' => '社會',
-    'life' => '綜合活動',
-    _ => '學習領域',
-  };
-  return (
-    objectives: [
-      '能說明「$title」與生活或社會情境的關聯',
-      '能運用本單元關鍵詞彙完成課堂任務或簡易探究',
-      '能與他人合作、聆聽意見並調整自己的學習策略',
-    ],
-    keyPoints: [
-      '對應國小 $grade 年級 $semLabel · $domain 之學習重點',
-      '善用圖表、實例、討論與反思深化理解',
-      '完成學習單或學習日誌有助統整概念',
-    ],
-    vocabulary: [
-      VocabItem(term: title, meaning: '本單元探究主題', example: '對照課本目標'),
-      VocabItem(term: domain, meaning: '課程領域名稱', example: '呼應 108 課綱素養導向'),
-      VocabItem(term: '探究', meaning: '觀察、提問、蒐集資料並歸納', example: '小組討論後發表'),
-    ],
-  );
-}
-
 List<Lesson> _unitsFromTitles({
   required String subjectId,
   required String idPrefix,
@@ -70,14 +37,10 @@ List<Lesson> _unitsFromTitles({
     final semNum = sem == Semester.first ? 1 : 2;
     final id = '$idPrefix-$grade-$semNum-$unit';
     final focus = title;
-    final content = _semContentIntro(grade, sem, focus) +
-        (extraLine?.call(grade, sem, unit, title) ?? '');
-    final okv = _supLearningFocus(
-      subjectId: subjectId,
-      grade: grade,
-      semester: sem,
-      title: title,
-    );
+    final bundle = TopicContentData.forId(id);
+    final content = bundle?.content ??
+        (_semContentIntro(grade, sem, focus) +
+            (extraLine?.call(grade, sem, unit, title) ?? ''));
     return lesson108Core(
       id: id,
       subjectId: subjectId,
@@ -87,9 +50,9 @@ List<Lesson> _unitsFromTitles({
       title: title,
       summary: '國小 $grade 年級「$title」之概念與應用。',
       content: content,
-      objectives: okv.objectives,
-      keyPoints: okv.keyPoints,
-      vocabulary: okv.vocabulary,
+      objectives: const [],
+      keyPoints: bundle?.keyPoints ?? const [],
+      vocabulary: bundle?.vocabulary ?? const [],
     );
   }
 

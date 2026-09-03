@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../curriculum/curriculum.dart';
 import '../providers/progress_provider.dart';
 import '../theme/app_theme.dart';
+import '../models/lesson.dart';
 import '../widgets/subject_card.dart';
 import '../widgets/progress_ring.dart';
 import 'lesson_list_screen.dart';
@@ -42,13 +43,13 @@ class HomeScreen extends StatelessWidget {
             _buildDailyReviewCard(context),
             const SizedBox(height: 20),
             const Text(
-              '今日任務',
+              '其他課程',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 10),
             if (todayLesson != null)
               _buildTodayLessonCard(context, todayLesson),
-            const SizedBox(height: 20),
+            if (todayLesson != null) const SizedBox(height: 20),
             const Text(
               '小遊戲',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
@@ -327,7 +328,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTodayLessonCard(BuildContext context, todayLesson) {
+  Widget _buildTodayLessonCard(BuildContext context, Lesson todayLesson) {
     final subject = subjectById(todayLesson.subjectId);
     return Card(
       child: InkWell(
@@ -491,7 +492,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  dynamic _pickTodayLesson(int grade) {
+  Lesson? _pickTodayLesson(int grade) {
     final gradeLessons =
         kLessons.where((l) => l.grade == grade).toList();
     if (gradeLessons.isEmpty) {

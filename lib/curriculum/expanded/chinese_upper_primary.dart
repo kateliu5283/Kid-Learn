@@ -1,4 +1,5 @@
 import '../../models/lesson.dart';
+import '../../services/topic_content_data.dart';
 import 'lesson_108_helpers.dart';
 
 /// 國語 5～6 年級：每學期 6 單元（閱讀、寫作、古詩、媒體素養等），對齊 108 課綱國語文學習內容。
@@ -48,33 +49,43 @@ List<Lesson> buildChineseUpperPrimaryLessons() {
   for (final r in rows) {
     for (var i = 0; i < r.s1.length; i++) {
       final title = r.s1[i];
+      final id = 'ex-cn-${r.g}-1-${i + 1}';
+      final topic = TopicContentData.forId(id);
       out.add(
         lesson108Core(
-          id: 'ex-cn-${r.g}-1-${i + 1}',
+          id: id,
           subjectId: 'chinese',
           grade: r.g,
           semester: Semester.first,
           unit: i + 1,
           title: title,
           summary: '國小 ${r.g} 年級上學期：$title。',
-          content: _semContentIntro(r.g, Semester.first, title) +
-              '\n\n閱讀時可標示關鍵句，寫作時先列大綱再擴寫。',
+          content: topic?.content ??
+              (_semContentIntro(r.g, Semester.first, title) +
+                  '\n\n閱讀時可標示關鍵句，寫作時先列大綱再擴寫。'),
+          keyPoints: topic?.keyPoints ?? const [],
+          vocabulary: topic?.vocabulary ?? const [],
         ),
       );
     }
     for (var i = 0; i < r.s2.length; i++) {
       final title = r.s2[i];
+      final id = 'ex-cn-${r.g}-2-${i + 1}';
+      final topic = TopicContentData.forId(id);
       out.add(
         lesson108Core(
-          id: 'ex-cn-${r.g}-2-${i + 1}',
+          id: id,
           subjectId: 'chinese',
           grade: r.g,
           semester: Semester.second,
           unit: i + 1,
           title: title,
           summary: '國小 ${r.g} 年級下學期：$title。',
-          content: _semContentIntro(r.g, Semester.second, title) +
-              '\n\n多朗讀、多思考作者寫作目的，有助於理解文本。',
+          content: topic?.content ??
+              (_semContentIntro(r.g, Semester.second, title) +
+                  '\n\n多朗讀、多思考作者寫作目的，有助於理解文本。'),
+          keyPoints: topic?.keyPoints ?? const [],
+          vocabulary: topic?.vocabulary ?? const [],
         ),
       );
     }

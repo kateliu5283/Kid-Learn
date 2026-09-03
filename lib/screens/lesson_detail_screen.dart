@@ -3,16 +3,25 @@ import 'package:provider/provider.dart';
 import '../curriculum/curriculum.dart';
 import '../models/lesson.dart';
 import '../providers/progress_provider.dart';
+import '../services/lesson_teaching.dart';
+import '../widgets/lesson_teaching_view.dart';
 import 'lesson/preview_screen.dart';
 import 'lesson/lesson_study_screen.dart';
 import 'lesson/review_screen.dart';
 import 'quiz_screen.dart';
 
 /// 課程首頁：步驟式導覽 —— 預習 → 學習 → 測驗 → 複習
-class LessonDetailScreen extends StatelessWidget {
+class LessonDetailScreen extends StatefulWidget {
   final Lesson lesson;
 
   const LessonDetailScreen({super.key, required this.lesson});
+
+  @override
+  State<LessonDetailScreen> createState() => _LessonDetailScreenState();
+}
+
+class _LessonDetailScreenState extends State<LessonDetailScreen> {
+  Lesson get lesson => widget.lesson;
 
   @override
   Widget build(BuildContext context) {
@@ -33,19 +42,31 @@ class LessonDetailScreen extends StatelessWidget {
           if (hasStudied) _buildProgressCard(progress.lastScore, progress.stars),
           if (hasStudied) const SizedBox(height: 16),
           const Text(
-            '學習流程',
+            '本課內容',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          LessonTeachingView(
+            lesson: lesson,
+            accent: subject.color,
+            compact: true,
+            showSectionLabels: true,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            '開始學習',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
           _StepCard(
             step: 1,
             title: '預習',
-            subtitle: '學習目標、重點搶先看、關鍵字詞',
+            subtitle: LessonTeaching.showsVocabulary(lesson)
+                ? '先看課文圖文、認識字詞'
+                : '先看重點整理與例子',
             icon: Icons.visibility_rounded,
             color: const Color(0xFF42A5F5),
-            badge: lesson.vocabulary.isNotEmpty
-                ? '${lesson.vocabulary.length} 個字詞'
-                : null,
+            badge: _previewBadge(lesson),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -106,6 +127,15 @@ class LessonDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String? _previewBadge(Lesson lesson) {
+    if (LessonTeaching.showsVocabulary(lesson)) {
+      final count = LessonTeaching.effectiveVocabulary(lesson).length;
+      return count > 0 ? '$count 個字詞' : null;
+    }
+    final count = LessonTeaching.effectiveKeyPoints(lesson).length;
+    return count > 0 ? '$count 個重點' : null;
   }
 
   Widget _buildHeader(Color color) {

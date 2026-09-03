@@ -10,6 +10,8 @@ import '../../services/learning_record_sync.dart';
 import '../../services/learning_records_api.dart' show LearningActivityTypes;
 import '../../services/remote_question_repository.dart';
 import '../../widgets/kid_button.dart';
+import '../../widgets/lesson_teaching_view.dart';
+import '../../services/lesson_teaching.dart';
 
 /// 複習畫面：摘要重點 + 綜合題（該課題目 + 延伸題庫），幫助鞏固記憶。
 /// 若 lesson 為 null，表示「每日複習」：從學過的課程混合出題。
@@ -226,10 +228,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   Widget _buildIntro(Lesson lesson, Color color) {
-    final keyPoints = lesson.keyPoints.isNotEmpty
-        ? lesson.keyPoints
-        : (lesson.summary.isNotEmpty ? [lesson.summary] : <String>[]);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('複習'),
@@ -249,8 +247,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.replay_rounded,
-                    color: Colors.white, size: 28),
+                const Icon(Icons.replay_rounded, color: Colors.white, size: 28),
                 const SizedBox(height: 6),
                 Text(
                   '複習：${lesson.title}',
@@ -262,7 +259,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '回顧重點，再練習 ${_questions.length} 題挑戰',
+                  '再看一次重點，然後練習 ${_questions.length} 題',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
@@ -271,46 +268,22 @@ class _ReviewScreenState extends State<ReviewScreen> {
               ],
             ),
           ),
-          if (keyPoints.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            const Text('重點回顧',
-                style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
-            ...keyPoints.map((p) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: color.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.check_circle_rounded,
-                          color: color, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(p,
-                            style: const TextStyle(
-                                fontSize: 15, height: 1.5)),
-                      ),
-                    ],
-                  ),
-                )),
-          ],
-          if (lesson.vocabulary.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const Text(
+            '課文重點',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          LessonTeachingView(lesson: lesson, accent: color, compact: true),
+          if (LessonTeaching.effectiveVocabulary(lesson).isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text('重要字詞',
-                style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: lesson.vocabulary
+              children: LessonTeaching.effectiveVocabulary(lesson)
                   .map((v) => Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),

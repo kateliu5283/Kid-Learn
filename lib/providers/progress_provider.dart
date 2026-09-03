@@ -8,6 +8,7 @@ class ProgressProvider extends ChangeNotifier {
   static const _kProfilesKey = 'profiles_v2';
   static const _kCurrentIdKey = 'current_profile_id';
   static const _kProgressPrefix = 'progress_';
+  static const _kTutorialPrefix = 'tutorials_';
 
   // 舊版單帳號的 keys（用於遷移）
   static const _kLegacyProfileKey = 'user_profile';
@@ -18,6 +19,9 @@ class ProgressProvider extends ChangeNotifier {
 
   /// profileId -> (lessonId -> LessonProgress)
   final Map<String, Map<String, LessonProgress>> _progressByProfile = {};
+
+  /// profileId -> 已看過的教學 guideId 集合
+  final Map<String, Set<String>> _seenTutorialsByProfile = {};
 
   bool _loaded = false;
 
@@ -106,7 +110,7 @@ class ProgressProvider extends ChangeNotifier {
       }
     }
 
-    // 載入每個 profile 的進度
+    // 載入每個 profile 的進度與教學紀錄
     for (final p in _profiles) {
       final key = '$_kProgressPrefix${p.id}';
       final raw = sp.getString(key);
@@ -121,6 +125,11 @@ class ProgressProvider extends ChangeNotifier {
       } else {
         _progressByProfile.putIfAbsent(p.id, () => {});
       }
+
+      final tutorialKey = '$_kTutorialPrefix${p.id}';
+      final seenList = sp.getStringList(tutorialKey);
+      _seenTutorialsByProfile[p.id] =
+          seenList != null ? seenList.toSet() : <String>{};
     }
 
     if (_currentId == null && _profiles.isNotEmpty) {
@@ -166,6 +175,7 @@ class ProgressProvider extends ChangeNotifier {
     );
     _profiles.add(profile);
     _progressByProfile[profile.id] = {};
+    _seenTutorialsByProfile[profile.id] = {};
     if (makeCurrent) _currentId = profile.id;
 
     final sp = await SharedPreferences.getInstance();
@@ -197,12 +207,30 @@ class ProgressProvider extends ChangeNotifier {
     if (_profiles.length <= 1) return; // 至少保留一個
     _profiles.removeWhere((p) => p.id == id);
     _progressByProfile.remove(id);
+    _seenTutorialsByProfile.remove(id);
     if (_currentId == id) {
       _currentId = _profiles.first.id;
     }
     final sp = await SharedPreferences.getInstance();
     await _save(sp);
     await sp.remove('$_kProgressPrefix$id');
+    await sp.remove('$_kTutorialPrefix$id');
+    notifyListeners();
+  }
+
+  bool hasSeenTutorial(String guideId) {
+    final seen = _seenTutorialsByProfile[profile.id];
+    return seen?.contains(guideId) ?? false;
+  }
+
+  Future<void> markTutorialSeen(String guideId) async {
+    final id = profile.id;
+    _seenTutorialsByProfile.putIfAbsent(id, () => {}).add(guideId);
+    final sp = await SharedPreferences.getInstance();
+    await sp.setStringList(
+      '$_kTutorialPrefix$id',
+      _seenTutorialsByProfile[id]!.toList(),
+    );
     notifyListeners();
   }
 

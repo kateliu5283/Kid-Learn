@@ -620,16 +620,24 @@ const List<Lesson> kChineseLessons = [
       '能口述或寫出一句與主題相關的完整語句',
     ],
     keyPoints: [
-      '閱讀時先掌握段落大意，再標示細節與生字',
-      '書寫時注意筆順、間架與標點',
-      '口語發表要語句完整、條理清楚',
+      '升上二年級代表長大了一歲，要更用心學習',
+      '開學日可能緊張或興奮，每種心情都正常',
+      '二年級的學姊學長可以幫助一年級的學弟妹',
     ],
     vocabulary: [
-      VocabItem(term: '課文', meaning: '共同閱讀的教材文章', example: '朗讀課文兩次'),
-      VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
-      VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
+      VocabItem(term: '升', meaning: '年級往上，例如升上二年級', example: '我升上二年級了'),
+      VocabItem(term: '暑', meaning: '暑假的暑，代表夏天長長的假期', example: '暑假過完了'),
+      VocabItem(term: '課', meaning: '上課、課堂', example: '今天第一節課是國語'),
+      VocabItem(term: '幫', meaning: '幫助別人', example: '我要幫助學弟學妹'),
     ],
-    content: '暑假過完了，我升上二年級。\n學校裡有新老師、新同學，還有新的課本。\n我要更用心學習，幫助學弟學妹。\n\n生字：升、暑、課、用、幫',
+    content: '''暑假過完了，我升上二年級。
+今天是開學日，我背著書包走進教室。教室換到新的一樓，黑板擦得亮亮的。
+
+新老師笑著說：「歡迎來到二年級！」有些同學是熟面孔，也有新轉來的同學。
+
+我升上二年級了，心裡既期待又有點緊張。我要更用心聽課，也要像學姊學長一樣，幫助一年級的學弟妹。
+
+生字：升、暑、課、幫''',
     questions: [
       Question(
         id: 'q1',

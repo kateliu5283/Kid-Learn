@@ -1,5 +1,6 @@
 import '../../models/lesson.dart';
 import '../../models/question.dart';
+import '../../services/topic_content_data.dart';
 import 'lesson_108_helpers.dart';
 
 /// 數學 3～6 年級：每學期 6 單元，主題對齊 108 課綱數學領域常見學習內容（數與量、幾何、關係、統計與機率等）。
@@ -63,17 +64,22 @@ List<Lesson> buildMathUpperPrimaryLessons() {
     for (final s in specs)
       () {
         final okv = _mathLearningBundle(s);
+        final id = 'ex-ma-${s.grade}-${s.semester}-${s.unit}';
+        final topic = TopicContentData.forId(id);
         return lesson108Core(
-          id: 'ex-ma-${s.grade}-${s.semester}-${s.unit}',
+          id: id,
           subjectId: 'math',
           grade: s.grade,
           semester: s.semester == 1 ? Semester.first : Semester.second,
           unit: s.unit,
           title: s.title,
           summary: s.summary,
-          content: '${s.content}\n\n${_semIntro(s.grade, s.semester)}\n重點：${s.summary}。',
-          objectives: okv.objectives,
-          keyPoints: okv.keyPoints,
+          content: topic?.content ??
+              '${s.content}\n\n${_semIntro(s.grade, s.semester)}\n重點：${s.summary}。',
+          objectives: const [],
+          keyPoints: topic?.keyPoints.isNotEmpty == true
+              ? topic!.keyPoints
+              : okv.keyPoints,
           vocabulary: okv.vocabulary,
           questions: _mathQuestions(s),
         );

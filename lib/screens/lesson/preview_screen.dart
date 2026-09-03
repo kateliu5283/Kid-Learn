@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../curriculum/curriculum.dart';
 import '../../models/lesson.dart';
+import '../../services/lesson_teaching.dart';
 import '../../widgets/kid_button.dart';
+import '../../widgets/lesson_teaching_view.dart';
 import 'lesson_study_screen.dart';
 
 /// 預習畫面：介紹課程內容、重點、關鍵字詞，幫助學習前建立預期。
@@ -17,52 +19,21 @@ class PreviewScreen extends StatefulWidget {
 class _PreviewScreenState extends State<PreviewScreen> {
   int _currentStep = 0;
 
-  List<String> get _objectives =>
-      widget.lesson.objectives.isNotEmpty
-          ? widget.lesson.objectives
-          : _fallbackObjectives();
-
-  List<String> _fallbackObjectives() {
-    return [
-      '認識「${widget.lesson.title}」的主要內容',
-      widget.lesson.summary,
-      '能正確完成本課的測驗',
-    ];
-  }
-
-  List<String> get _keyPoints =>
-      widget.lesson.keyPoints.isNotEmpty
-          ? widget.lesson.keyPoints
-          : _fallbackKeyPoints();
-
-  List<String> _fallbackKeyPoints() {
-    final lines = widget.lesson.content
-        .split('\n')
-        .where((e) => e.trim().isNotEmpty)
-        .take(4)
-        .toList();
-    return lines.isEmpty ? [widget.lesson.summary] : lines;
-  }
-
-  List<VocabItem> get _vocabulary => widget.lesson.vocabulary;
+  List<VocabItem> get _vocabulary =>
+      LessonTeaching.effectiveVocabulary(widget.lesson);
 
   @override
   Widget build(BuildContext context) {
     final subject = subjectById(widget.lesson.subjectId);
     final steps = <_Step>[
       _Step(
-        title: '今天要學什麼？',
-        icon: Icons.flag_rounded,
-        builder: () => _buildObjectives(subject.color),
-      ),
-      _Step(
-        title: '重點搶先看',
-        icon: Icons.lightbulb_rounded,
-        builder: () => _buildKeyPoints(subject.color),
+        title: '課文內容',
+        icon: Icons.menu_book_rounded,
+        builder: () => _buildContentPreview(subject.color),
       ),
       if (_vocabulary.isNotEmpty)
         _Step(
-          title: '關鍵字詞',
+          title: '重要字詞',
           icon: Icons.auto_stories_rounded,
           builder: () => _buildVocab(subject.color),
         ),
@@ -109,6 +80,21 @@ class _PreviewScreenState extends State<PreviewScreen> {
     );
   }
 
+  Widget _buildContentPreview(Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _LessonCoverCard(lesson: widget.lesson),
+        const SizedBox(height: 16),
+        LessonTeachingView(
+          lesson: widget.lesson,
+          accent: color,
+          compact: true,
+        ),
+      ],
+    );
+  }
+
   Widget _buildStepHeader(Color color, List<_Step> steps) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
@@ -128,99 +114,6 @@ class _PreviewScreenState extends State<PreviewScreen> {
           );
         }),
       ),
-    );
-  }
-
-  Widget _buildObjectives(Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _LessonCoverCard(lesson: widget.lesson),
-        const SizedBox(height: 16),
-        const Text(
-          '學習目標',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-        const SizedBox(height: 8),
-        ..._objectives.asMap().entries.map((e) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${e.key + 1}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    e.value,
-                    style: const TextStyle(fontSize: 15, height: 1.5),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildKeyPoints(Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: _keyPoints.map((p) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.12),
-                color.withValues(alpha: 0.04),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.star_rounded, color: color, size: 22),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  p,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
     );
   }
 
