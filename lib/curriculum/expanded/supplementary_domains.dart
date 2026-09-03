@@ -1,5 +1,6 @@
 import '../../models/lesson.dart';
 import '../../services/topic_content_data.dart';
+import 'english_quiz.dart';
 import 'lesson_108_helpers.dart';
 
 /// 英語、自然（二～六年級）、社會、綜合：國小 1～6 年級、每學期 6 單元，對應 108 課綱常見主題軸（不依特定版本教科書）。
@@ -38,9 +39,17 @@ List<Lesson> _unitsFromTitles({
     final id = '$idPrefix-$grade-$semNum-$unit';
     final focus = title;
     final bundle = TopicContentData.forId(id);
+    final vocabulary = bundle?.vocabulary ?? const [];
     final content = bundle?.content ??
         (_semContentIntro(grade, sem, focus) +
             (extraLine?.call(grade, sem, unit, title) ?? ''));
+    final questions = subjectId == 'english'
+        ? englishQuizForUnit(
+            lessonId: id,
+            title: title,
+            vocabulary: vocabulary,
+          )
+        : null;
     return lesson108Core(
       id: id,
       subjectId: subjectId,
@@ -52,7 +61,8 @@ List<Lesson> _unitsFromTitles({
       content: content,
       objectives: const [],
       keyPoints: bundle?.keyPoints ?? const [],
-      vocabulary: bundle?.vocabulary ?? const [],
+      vocabulary: vocabulary,
+      questions: questions,
     );
   }
 
