@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/parent_auth_provider.dart';
 import '../providers/progress_provider.dart';
+import '../services/learning_progress_sync.dart';
 import '../theme/app_theme.dart';
 import 'main_scaffold.dart';
 import 'profile/profile_select_screen.dart';
@@ -21,8 +25,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _bootstrap() async {
     final provider = context.read<ProgressProvider>();
-    await provider.load();
-    await Future.delayed(const Duration(milliseconds: 800));
+    final auth = context.read<ParentAuthProvider>();
+    await Future.wait([
+      provider.load(),
+      auth.whenReady,
+      Future<void>.delayed(const Duration(milliseconds: 800)),
+    ]);
+    if (!mounted) return;
+    if (auth.isSignedIn) {
+      await auth.refreshMe();
+    }
+    if (!mounted) return;
+    final token = auth.token;
+    if (auth.isSignedIn && auth.isEmailVerified && token != null) {
+      final pull = LearningProgressSync.pull(token: token, progress: provider);
+      if (!provider.hasAnyProfile) {
+        await pull;
+      } else {
+        unawaited(pull);
+      }
+    }
     if (!mounted) return;
     // 沒有任何帳號 → 去建立帳號畫面；有則進入主畫面
     if (!provider.hasAnyProfile) {

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../curriculum/curriculum.dart';
 import '../providers/parent_auth_provider.dart';
 import '../providers/progress_provider.dart';
+import '../services/learning_progress_sync.dart';
 import '../services/parent_auth_api.dart';
 import 'profile/profile_select_screen.dart';
 import 'profile/profile_edit_sheet.dart';
@@ -620,7 +622,7 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        '驗證後才能上傳學習紀錄與產生教師邀請 QR。本機開發時驗證信會寫入後端 log。',
+                        '驗證後才能上傳學習紀錄、還原進度與產生教師邀請 QR。本機開發時驗證信會寫入後端 log。',
                         style: TextStyle(fontSize: 12, height: 1.4),
                       ),
                       const SizedBox(height: 8),
@@ -631,9 +633,15 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                                 ? null
                                 : () async {
                                     setState(() => _busy = true);
-                                    await context
-                                        .read<ParentAuthProvider>()
-                                        .refreshMe();
+                                    final auth =
+                                        context.read<ParentAuthProvider>();
+                                    await auth.refreshMe();
+                                    if (!context.mounted) return;
+                                    if (auth.isEmailVerified &&
+                                        auth.token != null) {
+                                      await _restoreProgress(context,
+                                          quiet: true);
+                                    }
                                     if (context.mounted) {
                                       setState(() => _busy = false);
                                     }
@@ -669,28 +677,48 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
               ],
               const SizedBox(height: 4),
               const Text(
-                '題庫仍會從後端自動更新；學習進度在本機。若註冊時已上傳孩子基本資料，後台與教師可對應雲端學生（家教／小班）。',
+                '已驗證的帳號會在登入後，把各課程的完成與星星從雲端還原到這台裝置。換手機時用同一個 Email 登入即可。',
                 style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
               ),
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton.icon(
-                  onPressed: _busy
-                      ? null
-                      : () async {
-                          setState(() => _busy = true);
-                          await context.read<ParentAuthProvider>().logout();
-                          if (context.mounted) {
-                            setState(() => _busy = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('已登出雲端帳號')),
-                            );
-                          }
-                        },
-                  icon: const Icon(Icons.logout, size: 18),
-                  label: const Text('登出'),
-                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.end,
+                children: [
+                  if (auth.isEmailVerified)
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : () => _restoreProgress(context),
+                      icon: const Icon(Icons.cloud_download_outlined, size: 18),
+                      label: const Text('還原學習進度'),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: _busy ? null : () => _exportAccount(context),
+                    icon: const Icon(Icons.ios_share, size: 18),
+                    label: const Text('匯出我的資料'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            setState(() => _busy = true);
+                            await context.read<ParentAuthProvider>().logout();
+                            if (context.mounted) {
+                              setState(() => _busy = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('已登出雲端帳號')),
+                              );
+                            }
+                          },
+                    icon: const Icon(Icons.logout, size: 18),
+                    label: const Text('登出'),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : () => _confirmDeleteAccount(context),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('刪除雲端帳號'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -811,6 +839,14 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
               onPressed: _busy ? null : () => _submit(context),
               child: Text(_registerMode ? '註冊家長帳號' : '登入'),
             ),
+            if (!_registerMode)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _busy ? null : () => _forgotPassword(context),
+                  child: const Text('忘記密碼？'),
+                ),
+              ),
           ],
         ),
       ),
@@ -856,6 +892,10 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
       );
     }
     if (!context.mounted) return;
+    if (ok && auth.isEmailVerified && auth.token != null) {
+      await _restoreProgress(context, quiet: true);
+    }
+    if (!context.mounted) return;
     setState(() => _busy = false);
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -870,5 +910,189 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
       _pwCtrl.clear();
       _pw2Ctrl.clear();
     }
+  }
+
+  Future<void> _forgotPassword(BuildContext context) async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('請先輸入 Email')),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    final message =
+        await context.read<ParentAuthProvider>().requestPasswordReset(email);
+    if (!context.mounted) return;
+    setState(() => _busy = false);
+    final err = context.read<ParentAuthProvider>().lastError;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message ?? err ?? '無法寄出信件')),
+    );
+  }
+
+  Future<void> _restoreProgress(BuildContext context, {bool quiet = false}) async {
+    if (!quiet) setState(() => _busy = true);
+    final auth = context.read<ParentAuthProvider>();
+    final progress = context.read<ProgressProvider>();
+    final token = auth.token;
+    var ok = false;
+    if (auth.isEmailVerified && token != null) {
+      ok = await LearningProgressSync.pull(token: token, progress: progress);
+    }
+    if (!context.mounted) return;
+    if (quiet) return;
+    setState(() => _busy = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? '已從雲端還原學習進度'
+              : (auth.isEmailVerified ? '無法還原，請稍後再試' : '請先完成 Email 驗證'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportAccount(BuildContext context) async {
+    setState(() => _busy = true);
+    final json = await context.read<ParentAuthProvider>().exportAccountJson();
+    if (!context.mounted) return;
+    setState(() => _busy = false);
+    if (json == null) {
+      final err = context.read<ParentAuthProvider>().lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err ?? '無法匯出資料')),
+      );
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: json));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已複製到剪貼簿，可貼到備忘錄或郵件保存')),
+    );
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final choice = await showDialog<_DeleteAccountChoice>(
+      context: context,
+      builder: (_) => const _DeleteAccountDialog(),
+    );
+    if (choice == null || !context.mounted) return;
+    setState(() => _busy = true);
+    final ok = await context.read<ParentAuthProvider>().deleteAccount(
+          password: choice.password,
+        );
+    if (!context.mounted) return;
+    if (!ok) {
+      setState(() => _busy = false);
+      final err = context.read<ParentAuthProvider>().lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err ?? '無法刪除帳號')),
+      );
+      return;
+    }
+    if (choice.wipeLocal) {
+      await context.read<ProgressProvider>().clearAllLocalData();
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ProfileSelectScreen(goToMainAfterSelect: true),
+        ),
+        (_) => false,
+      );
+      return;
+    }
+    setState(() => _busy = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('雲端帳號已刪除。這台裝置上的學習進度仍保留。')),
+    );
+  }
+}
+
+class _DeleteAccountChoice {
+  const _DeleteAccountChoice({
+    required this.password,
+    required this.wipeLocal,
+  });
+
+  final String password;
+  final bool wipeLocal;
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _password = TextEditingController();
+  bool _wipe = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('刪除雲端帳號'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '會刪除家長帳號、雲端孩子資料與學習紀錄，而且無法復原。',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _password,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: '目前的密碼',
+                border: const OutlineInputBorder(),
+                errorText: _error,
+              ),
+            ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _wipe,
+              onChanged: (v) => setState(() => _wipe = v ?? false),
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('一併清除這台裝置上的孩子檔案與學習進度'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          onPressed: () {
+            if (_password.text.isEmpty) {
+              setState(() => _error = '請輸入密碼');
+              return;
+            }
+            Navigator.pop(
+              context,
+              _DeleteAccountChoice(
+                password: _password.text,
+                wipeLocal: _wipe,
+              ),
+            );
+          },
+          child: const Text('刪除'),
+        ),
+      ],
+    );
   }
 }

@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\StudentLearningRecord;
 use App\Models\User;
 use App\Support\LearningActivityLabels;
+use App\Support\LessonStars;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -118,6 +119,69 @@ class LearningRecordController extends Controller
     }
 
     /**
+     * 各孩子的課程完成狀態（測驗／單課複習）。星星取較高的一次，分數取最新一次。
+     * 沒有 device_local_id 的孩子會寫入穩定的 c_{id}，讓新裝置能對回同一個學生。
+     */
+    public function progress(Request $request): JsonResponse
+    {
+        $user = $this->requireParent($request);
+
+        $students = $user->students()->orderBy('sort')->orderBy('id')->get();
+        foreach ($students as $student) {
+            if (filled($student->device_local_id)) {
+                continue;
+            }
+            $student->device_local_id = 'c_'.$student->id;
+            $student->save();
+        }
+
+        $byStudent = [];
+        if ($students->isNotEmpty()) {
+            $records = StudentLearningRecord::query()
+                ->whereIn('student_id', $students->pluck('id'))
+                ->whereIn('activity_type', [
+                    StudentLearningRecord::TYPE_LESSON_QUIZ,
+                    StudentLearningRecord::TYPE_LESSON_REVIEW,
+                ])
+                ->whereNotNull('context_key')
+                ->where('context_key', '!=', '')
+                ->orderBy('recorded_at')
+                ->orderBy('id')
+                ->get(['student_id', 'context_key', 'correct_count', 'question_count', 'recorded_at']);
+
+            foreach ($records as $record) {
+                $sid = (int) $record->student_id;
+                $lessonId = (string) $record->context_key;
+                $stars = LessonStars::fromCounts((int) $record->correct_count, (int) $record->question_count);
+                $current = $byStudent[$sid][$lessonId] ?? null;
+                $byStudent[$sid][$lessonId] = [
+                    'lesson_id' => $lessonId,
+                    'stars' => max($stars, (int) ($current['stars'] ?? 0)),
+                    'last_score' => (int) $record->correct_count,
+                    'question_count' => (int) $record->question_count,
+                    'last_studied_at' => $record->recorded_at?->toIso8601String(),
+                ];
+            }
+        }
+
+        $data = $students->map(function (Student $student) use ($byStudent) {
+            $lessons = array_values($byStudent[(int) $student->id] ?? []);
+            usort($lessons, fn (array $a, array $b) => strcmp($a['lesson_id'], $b['lesson_id']));
+
+            return [
+                'student_id' => $student->id,
+                'device_local_id' => $student->device_local_id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'avatar' => $student->avatar,
+                'lessons' => $lessons,
+            ];
+        })->values();
+
+        return response()->json(['data' => $data])->header('Cache-Control', 'no-store');
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array{0: int, 1: int, 2: string}
      */
@@ -178,7 +242,7 @@ class LearningRecordController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        abort_unless($user->role === User::ROLE_PARENT, 403, '僅家長可上傳學習紀錄。');
+        abort_unless($user->role === User::ROLE_PARENT, 403, '僅家長可操作學習紀錄。');
 
         return $user;
     }

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 | 依業務模組分區（與 docs/ARCHITECTURE.md 一致）：
 |   content   — 題庫／課程（核心）
 |   user      — 使用者（預留）
-|   learning  — 學習紀錄（App POST /learning/records；家長 token）
+|   learning  — 學習紀錄（App POST /learning/records、GET /learning/progress；家長 token）
 |   missions  — 任務（預留）
 |   analytics — 分析（預留）
 |
@@ -40,10 +40,15 @@ Route::prefix('v1')->group(function () {
         Route::post('user/register', [AuthController::class, 'register']);
         Route::post('user/login', [AuthController::class, 'login']);
     });
+    Route::post('user/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:6,1');
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('user/me', [AuthController::class, 'me']);
         Route::post('user/email/resend', [AuthController::class, 'resendVerification'])
+            ->middleware('throttle:6,1');
+        Route::get('user/export', [AuthController::class, 'exportData']);
+        Route::delete('user/account', [AuthController::class, 'destroyAccount'])
             ->middleware('throttle:6,1');
         Route::get('user/students', [StudentController::class, 'index']);
         Route::post('user/students', [StudentController::class, 'store']);
@@ -52,6 +57,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('parent.verified');
         Route::delete('user/students/{student}', [StudentController::class, 'destroy']);
         Route::post('learning/records', [LearningRecordController::class, 'store'])
+            ->middleware('parent.verified');
+        Route::get('learning/progress', [LearningRecordController::class, 'progress'])
             ->middleware('parent.verified');
     });
 

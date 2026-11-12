@@ -304,6 +304,67 @@ class ParentAuthApi {
     return ParentUser.fromJson(u);
   }
 
+  /// 寄出重設密碼信。不論 Email 是否存在，成功時都回同一句說明。
+  Future<String> requestPasswordReset(String email) async {
+    final res = await _client
+        .post(
+          _u('/user/forgot-password'),
+          headers: _headers(null),
+          body: jsonEncode({'email': email}),
+        )
+        .timeout(ApiConfig.timeout);
+    return _readMessage(res, fallback: '若此 Email 已註冊，請至信箱重設密碼。');
+  }
+
+  /// 匯出家長、孩子與學習紀錄的 JSON 原文。
+  Future<String> exportAccount(String token) async {
+    final res = await _client
+        .get(
+          _u('/user/export'),
+          headers: _headers(token),
+        )
+        .timeout(const Duration(seconds: 20));
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法匯出資料（${res.statusCode}）');
+    }
+    return res.body;
+  }
+
+  /// 以目前密碼刪除雲端家長帳號。
+  Future<void> deleteAccount(String token, {required String password}) async {
+    final res = await _client
+        .delete(
+          _u('/user/account'),
+          headers: _headers(token),
+          body: jsonEncode({'password': password}),
+        )
+        .timeout(ApiConfig.timeout);
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode == 429) {
+      throw ParentAuthException(_messageFromBody(res.body) ?? '嘗試次數過多，請稍後再試。');
+    }
+    if (res.statusCode == 422) {
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(res.body);
+      } catch (_) {
+        throw ParentAuthException('密碼不正確。');
+      }
+      if (decoded is Map<String, dynamic>) {
+        throw ParentAuthException(_firstValidationMessage(decoded) ?? '密碼不正確。');
+      }
+      throw ParentAuthException('密碼不正確。');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法刪除帳號（${res.statusCode}）');
+    }
+  }
+
   Future<void> resendVerificationEmail(String token) async {
     final res = await _client
         .post(
@@ -373,6 +434,41 @@ class ParentAuthApi {
     return raw
         .map((e) => CloudStudent.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<String> _readMessage(http.Response res, {required String fallback}) async {
+    if (res.statusCode == 429) {
+      throw ParentAuthException(_messageFromBody(res.body) ?? '嘗試次數過多，請稍後再試。');
+    }
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(res.body);
+    } catch (_) {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw ParentAuthException('請求失敗（${res.statusCode}）');
+      }
+      return fallback;
+    }
+    if (res.statusCode == 422 && decoded is Map<String, dynamic>) {
+      throw ParentAuthException(_firstValidationMessage(decoded) ?? '資料驗證失敗');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('請求失敗（${res.statusCode}）');
+    }
+    if (decoded is Map && decoded['message'] is String) {
+      return decoded['message'] as String;
+    }
+    return fallback;
+  }
+
+  String? _messageFromBody(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map && decoded['message'] is String) {
+        return decoded['message'] as String;
+      }
+    } catch (_) {}
+    return null;
   }
 
   String? _firstValidationMessage(Map<String, dynamic> body) {

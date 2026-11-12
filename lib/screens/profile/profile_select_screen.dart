@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_progress.dart';
+import '../../providers/parent_auth_provider.dart';
 import '../../providers/progress_provider.dart';
+import '../../services/learning_progress_sync.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/parent_gate.dart';
 import '../main_scaffold.dart';
 import 'profile_edit_sheet.dart';
 
@@ -18,6 +21,7 @@ class ProfileSelectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressProvider>();
+    final auth = context.watch<ParentAuthProvider>();
     final profiles = progress.profiles;
     final isEmpty = profiles.isEmpty;
 
@@ -45,7 +49,7 @@ class ProfileSelectScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Expanded(
                 child: isEmpty
-                    ? _buildCreateHero(context)
+                    ? _buildCreateHero(context, auth)
                     : _buildProfileList(context, progress, profiles),
               ),
               if (!isEmpty)
@@ -70,7 +74,7 @@ class ProfileSelectScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCreateHero(BuildContext context) {
+  Widget _buildCreateHero(BuildContext context, ParentAuthProvider auth) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -117,7 +121,80 @@ class ProfileSelectScreen extends StatelessWidget {
             ),
             onPressed: () => _addProfile(context),
           ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => _restoreFromCloud(context, auth),
+            child: Text(
+              auth.isSignedIn
+                  ? '還原雲端孩子'
+                  : '已有家長帳號？登入並還原',
+            ),
+          ),
+          if (auth.isSignedIn && !auth.isEmailVerified)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                '請先到信箱完成驗證，再按「還原雲端孩子」。',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 12, height: 1.4),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _restoreFromCloud(
+    BuildContext context,
+    ParentAuthProvider auth,
+  ) async {
+    final unlocked = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (routeContext) => ParentGateOverlay(
+          onUnlocked: () => Navigator.pop(routeContext, true),
+          onCancel: () => Navigator.pop(routeContext, false),
+        ),
+      ),
+    );
+    if (unlocked != true || !context.mounted) return;
+
+    if (!auth.isSignedIn) {
+      final loggedIn = await showDialog<bool>(
+        context: context,
+        builder: (_) => const _CloudLoginDialog(),
+      );
+      if (loggedIn != true || !context.mounted) return;
+    } else {
+      await auth.refreshMe();
+      if (!context.mounted) return;
+    }
+
+    final latest = context.read<ParentAuthProvider>();
+    if (!latest.isEmailVerified || latest.token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('請先完成 Email 驗證，再還原雲端孩子')),
+      );
+      return;
+    }
+
+    final progress = context.read<ProgressProvider>();
+    final ok = await LearningProgressSync.pull(
+      token: latest.token!,
+      progress: progress,
+    );
+    if (!context.mounted) return;
+    if (progress.hasAnyProfile && goToMainAfterSelect) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainScaffold()),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? '雲端尚未有孩子資料' : '無法還原，請稍後再試',
+        ),
       ),
     );
   }
@@ -345,5 +422,93 @@ class ProfileSelectScreen extends StatelessWidget {
     if (ok == true) {
       await provider.deleteProfile(profile.id);
     }
+  }
+}
+
+class _CloudLoginDialog extends StatefulWidget {
+  const _CloudLoginDialog();
+
+  @override
+  State<_CloudLoginDialog> createState() => _CloudLoginDialogState();
+}
+
+class _CloudLoginDialogState extends State<_CloudLoginDialog> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<ParentAuthProvider>();
+    return AlertDialog(
+      title: const Text('登入並還原'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              '用家長 Email 登入後，會把雲端孩子與課程完成狀態還原到這台裝置。',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _password,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '密碼',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            if (auth.lastError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                auth.lastError!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context, false),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _busy ? null : _submit,
+          child: const Text('登入'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    setState(() => _busy = true);
+    final ok = await context.read<ParentAuthProvider>().login(
+          email: _email.text.trim(),
+          password: _password.text,
+          localProfilesForMergeAfterAuth: const [],
+        );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) Navigator.pop(context, true);
   }
 }

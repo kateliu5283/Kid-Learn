@@ -127,6 +127,103 @@ class LearningRecordsApi {
       throw LearningRecordApiException(msg ?? '上傳失敗（${res.statusCode}）');
     }
   }
+
+  /// 已驗證家長的孩子與課程完成摘要（`GET /learning/progress`）。
+  Future<List<CloudChildProgress>> fetchProgress(String token) async {
+    final res = await _client
+        .get(
+          _u('/learning/progress'),
+          headers: _headers(token),
+        )
+        .timeout(ApiConfig.timeout);
+
+    if (res.statusCode == 401) {
+      throw LearningRecordApiException('登入已過期');
+    }
+    if (res.statusCode == 403) {
+      throw LearningRecordApiException('請先完成 Email 驗證');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw LearningRecordApiException('無法還原學習進度（${res.statusCode}）');
+    }
+
+    final decoded = jsonDecode(res.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw LearningRecordApiException('回應格式錯誤');
+    }
+    final data = decoded['data'];
+    if (data is! List) return [];
+    return data
+        .whereType<Map>()
+        .map((e) => CloudChildProgress.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+}
+
+class CloudLessonProgress {
+  const CloudLessonProgress({
+    required this.lessonId,
+    required this.stars,
+    required this.lastScore,
+    this.questionCount = 0,
+    this.lastStudiedAt,
+  });
+
+  final String lessonId;
+  final int stars;
+  final int lastScore;
+  final int questionCount;
+  final DateTime? lastStudiedAt;
+
+  factory CloudLessonProgress.fromJson(Map<String, dynamic> json) {
+    return CloudLessonProgress(
+      lessonId: json['lesson_id'] as String? ?? '',
+      stars: (json['stars'] as num?)?.toInt() ?? 0,
+      lastScore: (json['last_score'] as num?)?.toInt() ?? 0,
+      questionCount: (json['question_count'] as num?)?.toInt() ?? 0,
+      lastStudiedAt: json['last_studied_at'] == null
+          ? null
+          : DateTime.tryParse(json['last_studied_at'] as String),
+    );
+  }
+}
+
+class CloudChildProgress {
+  const CloudChildProgress({
+    required this.studentId,
+    required this.name,
+    required this.grade,
+    required this.lessons,
+    this.deviceLocalId,
+    this.avatar,
+  });
+
+  final int studentId;
+  final String? deviceLocalId;
+  final String name;
+  final int grade;
+  final String? avatar;
+  final List<CloudLessonProgress> lessons;
+
+  factory CloudChildProgress.fromJson(Map<String, dynamic> json) {
+    final rawLessons = json['lessons'];
+    final lessons = rawLessons is List
+        ? rawLessons
+            .whereType<Map>()
+            .map((e) => CloudLessonProgress.fromJson(
+                  Map<String, dynamic>.from(e),
+                ))
+            .toList()
+        : <CloudLessonProgress>[];
+    return CloudChildProgress(
+      studentId: (json['student_id'] as num).toInt(),
+      deviceLocalId: json['device_local_id'] as String?,
+      name: json['name'] as String? ?? '小朋友',
+      grade: (json['grade'] as num?)?.toInt() ?? 1,
+      avatar: json['avatar'] as String?,
+      lessons: lessons,
+    );
+  }
 }
 
 class LearningRecordApiException implements Exception {

@@ -47,6 +47,41 @@ class LessonProgress {
       );
 }
 
+/// 雲端一課的完成摘要。星星門檻與 [ProgressProvider] 相同，由後端計算。
+class RemoteLessonSnapshot {
+  const RemoteLessonSnapshot({
+    required this.lessonId,
+    required this.stars,
+    required this.lastScore,
+    this.lastStudiedAt,
+  });
+
+  final String lessonId;
+  final int stars;
+  final int lastScore;
+  final DateTime? lastStudiedAt;
+}
+
+/// 本機與雲端合併：星星取較高，分數與時間取較新的一次。
+LessonProgress mergeRemoteLesson(
+  LessonProgress local,
+  RemoteLessonSnapshot remote,
+) {
+  final remoteAt = remote.lastStudiedAt;
+  final localAt = local.lastStudiedAt;
+  final useRemoteScore = remoteAt != null &&
+      (localAt == null || !remoteAt.isBefore(localAt));
+  final stars = remote.stars > local.stars ? remote.stars : local.stars;
+
+  return LessonProgress(
+    lessonId: local.lessonId,
+    completed: true,
+    stars: stars < 0 ? 0 : (stars > 3 ? 3 : stars),
+    lastScore: useRemoteScore ? remote.lastScore : local.lastScore,
+    lastStudiedAt: useRemoteScore ? remoteAt : localAt,
+  );
+}
+
 class UserProfile {
   final String id;
   final String name;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetParentPassword;
 use App\Notifications\VerifyParentEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -76,6 +77,20 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyParentEmail);
+    }
+
+    /**
+     * 家長信裡的連結導向 App 用的重設頁。其他角色維持 Laravel 預設通知。
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        if ($this->role === self::ROLE_PARENT) {
+            $this->notify(new ResetParentPassword($token));
+
+            return;
+        }
+
+        parent::sendPasswordResetNotification($token);
     }
 
     public function canAccessPanel(Panel $panel): bool

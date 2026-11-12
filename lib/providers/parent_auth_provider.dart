@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,11 +28,12 @@ class ParentAuthProvider extends ChangeNotifier {
                 synchronizable: false,
               ),
             ) {
-    _restore();
+    whenReady = _restore();
   }
 
   final ParentAuthApi _api;
   final FlutterSecureStorage _secure;
+  late final Future<void> whenReady;
 
   String? _token;
   String? _email;
@@ -242,6 +245,65 @@ class ParentAuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _api.resendVerificationEmail(t);
+      return true;
+    } on ParentAuthException catch (e) {
+      _lastError = e.message;
+      return false;
+    } catch (_) {
+      _lastError = '網路錯誤，請稍後再試';
+      return false;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  /// 寄出重設密碼信。成功時回伺服器說明；失敗時寫入 [lastError] 並回 null。
+  Future<String?> requestPasswordReset(String email) async {
+    _lastError = null;
+    notifyListeners();
+    try {
+      return await _api.requestPasswordReset(email.trim());
+    } on ParentAuthException catch (e) {
+      _lastError = e.message;
+      return null;
+    } catch (_) {
+      _lastError = '網路錯誤，請稍後再試';
+      return null;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  /// 匯出雲端帳號與學習紀錄，回傳排版後的 JSON。
+  Future<String?> exportAccountJson() async {
+    final t = _token;
+    if (t == null) return null;
+    _lastError = null;
+    notifyListeners();
+    try {
+      final raw = await _api.exportAccount(t);
+      final decoded = jsonDecode(raw);
+      return const JsonEncoder.withIndent('  ').convert(decoded);
+    } on ParentAuthException catch (e) {
+      _lastError = e.message;
+      return null;
+    } catch (_) {
+      _lastError = '網路錯誤，請稍後再試';
+      return null;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  /// 刪除雲端家長帳號。成功後清除本機登入狀態。
+  Future<bool> deleteAccount({required String password}) async {
+    final t = _token;
+    if (t == null) return false;
+    _lastError = null;
+    notifyListeners();
+    try {
+      await _api.deleteAccount(t, password: password);
+      await _clearPrefs();
       return true;
     } on ParentAuthException catch (e) {
       _lastError = e.message;

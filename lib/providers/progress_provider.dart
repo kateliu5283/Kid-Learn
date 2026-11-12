@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_progress.dart';
+import '../services/learning_records_api.dart';
 
 /// 管理多帳號 + 各帳號的學習進度
 class ProgressProvider extends ChangeNotifier {
@@ -251,6 +252,107 @@ class ProgressProvider extends ChangeNotifier {
     await _saveCurrentProgress();
   }
 
+  /// 把雲端孩子與課程完成狀態合併進本機。已存在的孩子不覆寫姓名與年級。
+  Future<void> applyCloudProgress(List<CloudChildProgress> children) async {
+    if (children.isEmpty) return;
+
+    final hadNone = _profiles.isEmpty;
+    final touched = <String>{};
+    var changed = false;
+
+    for (final child in children) {
+      final id = child.deviceLocalId;
+      if (id == null || id.isEmpty || id == 'guest') continue;
+
+      if (!_profiles.any((p) => p.id == id)) {
+        final avatar = (child.avatar == null || child.avatar!.isEmpty)
+            ? '🦊'
+            : child.avatar!;
+        final grade = child.grade < 1 ? 1 : (child.grade > 6 ? 6 : child.grade);
+        final name = child.name.trim().isEmpty ? '小朋友' : child.name.trim();
+        _profiles.add(UserProfile(
+          id: id,
+          name: name,
+          grade: grade,
+          avatar: avatar,
+          createdAt: DateTime.now(),
+        ));
+        _progressByProfile[id] = {};
+        _seenTutorialsByProfile[id] = {};
+        changed = true;
+      }
+
+      final map = _progressByProfile.putIfAbsent(id, () => {});
+      for (final lesson in child.lessons) {
+        if (lesson.lessonId.isEmpty) continue;
+        final prev = map[lesson.lessonId] ??
+            LessonProgress(lessonId: lesson.lessonId);
+        final merged = mergeRemoteLesson(
+          prev,
+          RemoteLessonSnapshot(
+            lessonId: lesson.lessonId,
+            stars: lesson.stars,
+            lastScore: lesson.lastScore,
+            lastStudiedAt: lesson.lastStudiedAt,
+          ),
+        );
+        final same = merged.completed == prev.completed &&
+            merged.stars == prev.stars &&
+            merged.lastScore == prev.lastScore &&
+            merged.lastStudiedAt == prev.lastStudiedAt;
+        if (!same) {
+          map[lesson.lessonId] = merged;
+          touched.add(id);
+          changed = true;
+        }
+      }
+    }
+
+    if (hadNone && _profiles.isNotEmpty) {
+      _currentId = _profiles.first.id;
+      changed = true;
+    } else if (_currentId == null ||
+        !_profiles.any((p) => p.id == _currentId)) {
+      if (_profiles.isNotEmpty) {
+        _currentId = _profiles.first.id;
+        changed = true;
+      }
+    }
+
+    if (!changed) return;
+
+    final sp = await SharedPreferences.getInstance();
+    await _save(sp);
+    for (final id in touched) {
+      await _writeProgress(sp, id);
+    }
+    notifyListeners();
+  }
+
+  Future<void> clearAllLocalData() async {
+    final sp = await SharedPreferences.getInstance();
+    for (final p in _profiles) {
+      await sp.remove('$_kProgressPrefix${p.id}');
+      await sp.remove('$_kTutorialPrefix${p.id}');
+    }
+    _profiles = [];
+    _progressByProfile.clear();
+    _seenTutorialsByProfile.clear();
+    _currentId = null;
+    await sp.remove(_kProfilesKey);
+    await sp.remove(_kCurrentIdKey);
+    notifyListeners();
+  }
+
+  Future<void> _writeProgress(SharedPreferences sp, String id) async {
+    final map = _progressByProfile[id] ?? {};
+    await sp.setString(
+      '$_kProgressPrefix$id',
+      jsonEncode(map.map((k, v) => MapEntry(k, v.toJson()))),
+    );
+  }
+
+  /// 星星門檻須與 backend `App\Support\LessonStars` 一致。
   int _calcStars(int score, int total) {
     if (total == 0) return 0;
     final ratio = score / total;

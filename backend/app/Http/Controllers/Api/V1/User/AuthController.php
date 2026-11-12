@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
@@ -172,6 +173,116 @@ class AuthController extends Controller
             ->map(fn (Student $s) => $s->toApiArray())
             ->values()
             ->all();
+    }
+
+    /**
+     * 不透露 Email 是否已註冊。只有家長帳號會收到重設信。
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ], [
+            'email.required' => '請輸入 Email。',
+            'email.email' => 'Email 格式不正確。',
+        ]);
+
+        $message = '若此 Email 已註冊家長帳號，我們已寄出重設密碼信件。請至信箱開啟連結設定新密碼。';
+
+        $user = User::query()->where('email', $data['email'])->first();
+        if ($user && $user->role === User::ROLE_PARENT) {
+            Password::sendResetLink(['email' => $user->email]);
+        }
+
+        return response()->json(['message' => $message]);
+    }
+
+    /**
+     * 匯出這位家長名下的孩子與學習紀錄（不含密碼與邀請 token）。
+     */
+    public function exportData(Request $request): JsonResponse
+    {
+        $user = $this->requireParent($request);
+
+        $students = $user->students()
+            ->with(['learningRecords' => fn ($q) => $q->orderBy('recorded_at')->orderBy('id')])
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->get();
+
+        return response()->json([
+            'exported_at' => now()->toIso8601String(),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+                'created_at' => $user->created_at?->toIso8601String(),
+            ],
+            'students' => $students->map(fn (Student $student) => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'avatar' => $student->avatar,
+                'device_local_id' => $student->device_local_id,
+                'created_at' => $student->created_at?->toIso8601String(),
+                'learning_records' => $student->learningRecords
+                    ->map(fn ($record) => $record->toApiArray())
+                    ->values()
+                    ->all(),
+            ])->values()->all(),
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * 刪除家長帳號。孩子、學習紀錄與登入 token 一併移除。
+     */
+    public function destroyAccount(Request $request): JsonResponse
+    {
+        $user = $this->requireParent($request);
+
+        $data = $request->validate([
+            'password' => ['required', 'string'],
+        ], [
+            'password.required' => '請輸入目前的密碼。',
+        ]);
+
+        $throttleKey = 'parent-delete:'.$user->id;
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return response()->json([
+                'message' => "嘗試次數過多，請 {$seconds} 秒後再試。",
+            ], 429);
+        }
+
+        if (! Hash::check($data['password'], $user->password)) {
+            RateLimiter::hit($throttleKey, 15 * 60);
+            throw ValidationException::withMessages([
+                'password' => ['密碼不正確。'],
+            ]);
+        }
+
+        RateLimiter::clear($throttleKey);
+
+        DB::transaction(function () use ($user): void {
+            $email = $user->email;
+            $user->tokens()->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+            $user->delete();
+        });
+
+        return response()->json(['message' => '帳號已刪除。']);
+    }
+
+    protected function requireParent(Request $request): User
+    {
+        /** @var User $user */
+        $user = $request->user();
+        abort_unless($user->role === User::ROLE_PARENT, 403, '僅家長可操作此功能。');
+
+        return $user;
     }
 
     /**
