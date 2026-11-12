@@ -47,7 +47,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // 家長 App token 最長 60 天；過期後需重新登入
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION_MINUTES', 60 * 24 * 60),
 
     /*
     |--------------------------------------------------------------------------

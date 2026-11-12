@@ -7,7 +7,8 @@ import '../../models/lesson.dart';
 import '../../models/question.dart';
 import '../../providers/progress_provider.dart';
 import '../../services/learning_record_sync.dart';
-import '../../services/learning_records_api.dart' show LearningActivityTypes;
+import '../../services/learning_records_api.dart'
+    show LearningActivityTypes, LearningAnswer;
 import '../../services/remote_question_repository.dart';
 import '../../widgets/kid_button.dart';
 import '../../widgets/lesson_teaching_view.dart';
@@ -44,6 +45,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   int _score = 0;
   bool _finished = false;
   bool _showIntro = true;
+  final List<int> _selectedIndexes = [];
 
   @override
   void initState() {
@@ -126,6 +128,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     setState(() {
       _selected = idx;
       _revealed = true;
+      _selectedIndexes.add(idx);
       if (_questions[_currentIdx].isCorrect(idx)) {
         _score++;
       }
@@ -142,6 +145,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
     } else {
       setState(() => _finished = true);
       _confetti.play();
+      final answers = <LearningAnswer>[];
+      for (var i = 0; i < _questions.length; i++) {
+        if (i >= _selectedIndexes.length) break;
+        answers.add(LearningAnswer(
+          questionCode: _questions[i].id,
+          selectedIndex: _selectedIndexes[i],
+        ));
+      }
       // 如果是單課複習，把進度也順便記錄
       if (widget.lesson != null) {
         await context.read<ProgressProvider>().setLessonResult(
@@ -157,6 +168,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
           title: '複習：${widget.lesson!.title}',
           correctCount: _score,
           questionCount: _questions.length,
+          answers: answers,
         );
       } else {
         final progress = context.read<ProgressProvider>();
@@ -170,6 +182,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
               : '每日複習',
           correctCount: _score,
           questionCount: _questions.length,
+          answers: answers,
           meta: {'grade': grade},
         );
       }

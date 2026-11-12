@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Student extends Model
@@ -19,11 +20,16 @@ class Student extends Model
         'sort',
     ];
 
+    protected $hidden = [
+        'teacher_invite_token',
+    ];
+
     protected function casts(): array
     {
         return [
             'grade' => 'integer',
             'sort' => 'integer',
+            'teacher_invite_expires_at' => 'datetime',
         ];
     }
 
@@ -61,13 +67,67 @@ class Student extends Model
         ];
     }
 
-    /** 產生或沿用邀請 token，供家長 QR 讓教師加入 teacher_student。 */
+    /**
+     * 產生或沿用邀請 token（24 小時有效）。
+     * 沿用未過期 token 時不延長期限，避免外洩的 QR 被無限續期。
+     */
     public function ensureTeacherInviteToken(bool $regenerate = false): void
     {
-        if ($regenerate || blank($this->teacher_invite_token)) {
-            $this->teacher_invite_token = Str::random(48);
-            $this->save();
+        $expired = $this->teacher_invite_expires_at === null
+            || $this->teacher_invite_expires_at->isPast();
+
+        if (! $regenerate && filled($this->teacher_invite_token) && ! $expired) {
+            return;
         }
+
+        $this->teacher_invite_token = Str::random(48);
+        $this->teacher_invite_expires_at = now()->addDay();
+        $this->save();
+    }
+
+    public function isTeacherInviteValid(): bool
+    {
+        return filled($this->teacher_invite_token)
+            && $this->teacher_invite_expires_at !== null
+            && $this->teacher_invite_expires_at->isFuture();
+    }
+
+    /**
+     * 以資料列鎖綁定教師並作廢邀請。同時兩個請求只有一個會成功。
+     */
+    public static function claimTeacherInvite(User $teacher, string $token): bool
+    {
+        if ($teacher->role !== User::ROLE_TEACHER || $token === '') {
+            return false;
+        }
+
+        return DB::transaction(function () use ($teacher, $token): bool {
+            $student = static::query()
+                ->where('teacher_invite_token', $token)
+                ->lockForUpdate()
+                ->first();
+
+            if ($student === null || ! $student->isTeacherInviteValid()) {
+                return false;
+            }
+
+            $teacher->taughtStudents()->syncWithoutDetaching([$student->id]);
+            $student->teacher_invite_token = null;
+            $student->teacher_invite_expires_at = null;
+            $student->save();
+
+            return true;
+        });
+    }
+
+    public static function findByValidTeacherInviteToken(string $token): ?self
+    {
+        $student = static::query()->where('teacher_invite_token', $token)->first();
+        if ($student === null || ! $student->isTeacherInviteValid()) {
+            return null;
+        }
+
+        return $student;
     }
 
     public function joinTeachingUrl(): string

@@ -390,6 +390,7 @@ class _TeacherInviteQrSheetState extends State<_TeacherInviteQrSheet> {
   bool _busy = true;
   String? _error;
   String? _joinUrl;
+  DateTime? _expiresAt;
   int? _cloudStudentId;
 
   @override
@@ -419,12 +420,13 @@ class _TeacherInviteQrSheetState extends State<_TeacherInviteQrSheet> {
           _error =
               '雲端尚無與此孩子對應的資料（本機 id：${widget.deviceLocalId}）。請先登入／註冊雲端家長帳號並同步孩子，或從「管理帳號」確認已上傳。';
           _joinUrl = null;
+          _expiresAt = null;
           _cloudStudentId = null;
         });
         return;
       }
       _cloudStudentId = match.id;
-      final url = await _api.teacherInviteJoinUrl(
+      final link = await _api.teacherInviteJoinUrl(
         widget.bearerToken,
         studentId: match.id,
         regenerate: regenerate,
@@ -432,7 +434,8 @@ class _TeacherInviteQrSheetState extends State<_TeacherInviteQrSheet> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _joinUrl = url;
+        _joinUrl = link.url;
+        _expiresAt = link.expiresAt;
       });
     } on ParentAuthException catch (e) {
       if (!mounted) return;
@@ -507,6 +510,16 @@ class _TeacherInviteQrSheetState extends State<_TeacherInviteQrSheet> {
               ),
             ),
             const SizedBox(height: 12),
+            if (_expiresAt != null)
+              Text(
+                '此連結將於 ${_formatExpiry(_expiresAt!)} 失效，老師加入後也會立即作廢。重新開啟不會延長期限。',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  height: 1.4,
+                ),
+              ),
+            const SizedBox(height: 8),
             SelectableText(
               _joinUrl!,
               style: const TextStyle(fontSize: 11, height: 1.35),
@@ -523,6 +536,12 @@ class _TeacherInviteQrSheetState extends State<_TeacherInviteQrSheet> {
         ],
       ),
     );
+  }
+
+  String _formatExpiry(DateTime value) {
+    final local = value.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${local.year}-${two(local.month)}-${two(local.day)} ${two(local.hour)}:${two(local.minute)}';
   }
 }
 
@@ -582,6 +601,72 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                 '已登入：${auth.displayName ?? ''}（${auth.displayEmail ?? ''}）',
                 style: const TextStyle(height: 1.4),
               ),
+              if (!auth.isEmailVerified) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF8E1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '請至信箱完成 Email 驗證',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '驗證後才能上傳學習紀錄與產生教師邀請 QR。本機開發時驗證信會寫入後端 log。',
+                        style: TextStyle(fontSize: 12, height: 1.4),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: _busy
+                                ? null
+                                : () async {
+                                    setState(() => _busy = true);
+                                    await context
+                                        .read<ParentAuthProvider>()
+                                        .refreshMe();
+                                    if (context.mounted) {
+                                      setState(() => _busy = false);
+                                    }
+                                  },
+                            child: const Text('我已驗證，重新整理'),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: _busy
+                                ? null
+                                : () async {
+                                    setState(() => _busy = true);
+                                    final ok = await context
+                                        .read<ParentAuthProvider>()
+                                        .resendVerificationEmail();
+                                    if (!context.mounted) return;
+                                    setState(() => _busy = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          ok ? '已重寄驗證信' : (context.read<ParentAuthProvider>().lastError ?? '重寄失敗'),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            child: const Text('重寄驗證信'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 4),
               const Text(
                 '題庫仍會從後端自動更新；學習進度在本機。若註冊時已上傳孩子基本資料，後台與教師可對應雲端學生（家教／小班）。',
@@ -775,7 +860,11 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_registerMode ? '註冊成功' : '登入成功'),
+          content: Text(
+            _registerMode
+                ? '註冊成功，請至信箱完成 Email 驗證'
+                : (auth.isEmailVerified ? '登入成功' : '登入成功，請先完成 Email 驗證'),
+          ),
         ),
       );
       _pwCtrl.clear();

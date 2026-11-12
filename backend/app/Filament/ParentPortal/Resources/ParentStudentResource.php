@@ -58,7 +58,7 @@ class ParentStudentResource extends Resource
                     ->label('App 本機對應 id')
                     ->maxLength(64)
                     ->disabled()
-                    ->dehydrated()
+                    ->dehydrated(false)
                     ->visibleOn('edit')
                     ->helperText('由 App 註冊／登入同步時寫入，網頁僅供查看。'),
                 Forms\Components\TextInput::make('sort')

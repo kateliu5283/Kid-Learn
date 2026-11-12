@@ -5,7 +5,8 @@ import '../curriculum/curriculum.dart';
 import '../models/lesson.dart';
 import '../providers/progress_provider.dart';
 import '../services/learning_record_sync.dart';
-import '../services/learning_records_api.dart' show LearningActivityTypes;
+import '../services/learning_records_api.dart'
+    show LearningActivityTypes, LearningAnswer;
 import '../theme/app_theme.dart';
 import '../widgets/kid_button.dart';
 
@@ -25,6 +26,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _revealed = false;
   bool _showResult = false;
   late ConfettiController _confetti;
+  final List<int> _selectedIndexes = [];
 
   @override
   void initState() {
@@ -215,6 +217,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       if (!answered) {
                         setState(() {
                           if (question.isCorrect(_selected!)) _score++;
+                          _selectedIndexes.add(_selected!);
                           _revealed = true;
                         });
                       } else {
@@ -244,6 +247,14 @@ class _QuizScreenState extends State<QuizScreen> {
         );
     if (!mounted) return;
     final total = widget.lesson.questions.length;
+    final answers = <LearningAnswer>[];
+    for (var i = 0; i < widget.lesson.questions.length; i++) {
+      if (i >= _selectedIndexes.length) break;
+      answers.add(LearningAnswer(
+        questionCode: widget.lesson.questions[i].id,
+        selectedIndex: _selectedIndexes[i],
+      ));
+    }
     await LearningRecordSync.trySubmit(
       context,
       activityType: LearningActivityTypes.lessonQuiz,
@@ -251,6 +262,7 @@ class _QuizScreenState extends State<QuizScreen> {
       title: widget.lesson.title,
       correctCount: _score,
       questionCount: total,
+      answers: answers,
     );
     if (!mounted) return;
     setState(() => _showResult = true);

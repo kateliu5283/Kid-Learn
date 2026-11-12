@@ -23,11 +23,6 @@ class ProcessPendingTeacherInvite
             return;
         }
 
-        $student = Student::query()->where('teacher_invite_token', $token)->first();
-        if ($student === null) {
-            return;
-        }
-
-        $user->taughtStudents()->syncWithoutDetaching([$student->id]);
+        Student::claimTeacherInvite($user, $token);
     }
 }

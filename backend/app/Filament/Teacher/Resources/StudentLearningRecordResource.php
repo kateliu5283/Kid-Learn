@@ -65,7 +65,18 @@ class StudentLearningRecordResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('student.parent.email')
                     ->label('家長 Email')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('grading_source')
+                    ->label('計分')
+                    ->state(function (StudentLearningRecord $record): string {
+                        $grading = is_array($record->meta) ? ($record->meta['grading'] ?? null) : null;
+
+                        return match ($grading) {
+                            'server' => '伺服器',
+                            'client', 'client_local', 'client_mixed' => '裝置回報',
+                            default => '—',
+                        };
+                    }),
                 Tables\Columns\TextColumn::make('activity_type')
                     ->label('類型')
                     ->formatStateUsing(fn (string $state): string => LearningActivityLabels::label($state))

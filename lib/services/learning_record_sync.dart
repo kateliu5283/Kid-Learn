@@ -7,7 +7,7 @@ import '../providers/parent_auth_provider.dart';
 import '../providers/progress_provider.dart';
 import 'learning_records_api.dart';
 
-/// 在測驗／複習／遊戲完成後背景上傳（未登入家長則略過）。
+/// 在測驗／複習／遊戲完成後背景上傳（未登入家長或未驗證 Email 則略過）。
 class LearningRecordSync {
   LearningRecordSync._();
 
@@ -24,11 +24,14 @@ class LearningRecordSync {
     String? title,
     required int correctCount,
     required int questionCount,
+    List<LearningAnswer>? answers,
     int? durationSeconds,
     Map<String, dynamic>? meta,
   }) async {
     final auth = context.read<ParentAuthProvider>();
-    if (!auth.isSignedIn || auth.token == null) return;
+    if (!auth.isSignedIn || auth.token == null || !auth.isEmailVerified) {
+      return;
+    }
 
     final profile = context.read<ProgressProvider>().profile;
     final localId = profile.id;
@@ -43,6 +46,7 @@ class LearningRecordSync {
         title: title,
         correctCount: correctCount,
         questionCount: questionCount,
+        answers: answers,
         durationSeconds: durationSeconds,
         meta: meta,
         clientSubmissionId: _clientSubmissionId(),

@@ -56,6 +56,7 @@ class ParentPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\EnsureParentEmailIsVerified::class,
             ]);
     }
 }

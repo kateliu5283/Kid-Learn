@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/parent_auth_api.dart';
@@ -6,23 +7,41 @@ import '../services/parent_auth_api.dart';
 const _kToken = 'parent_auth_token_v1';
 const _kEmail = 'parent_auth_email_v1';
 const _kName = 'parent_auth_name_v1';
+const _kVerified = 'parent_auth_email_verified_v1';
 
 /// 雲端家長帳號（與本機「孩子暱稱」分離；題庫仍走 [CurriculumApi]）。
+///
+/// Sanctum Bearer token 存於平台 Keychain／Keystore（[FlutterSecureStorage]），
+/// email／姓名仍可存 SharedPreferences。
 class ParentAuthProvider extends ChangeNotifier {
-  ParentAuthProvider({ParentAuthApi? api}) : _api = api ?? ParentAuthApi() {
+  ParentAuthProvider({
+    ParentAuthApi? api,
+    FlutterSecureStorage? secureStorage,
+  })  : _api = api ?? ParentAuthApi(),
+        _secure = secureStorage ??
+            const FlutterSecureStorage(
+              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              iOptions: IOSOptions(
+                accessibility: KeychainAccessibility.first_unlock_this_device,
+                synchronizable: false,
+              ),
+            ) {
     _restore();
   }
 
   final ParentAuthApi _api;
+  final FlutterSecureStorage _secure;
 
   String? _token;
   String? _email;
   String? _name;
+  bool _emailVerified = false;
   bool _ready = false;
   String? _lastError;
 
   bool get isReady => _ready;
   bool get isSignedIn => _token != null && _token!.isNotEmpty;
+  bool get isEmailVerified => _emailVerified;
   String? get displayEmail => _email;
   String? get displayName => _name;
   String? get lastError => _lastError;
@@ -35,32 +54,53 @@ class ParentAuthProvider extends ChangeNotifier {
 
   Future<void> _restore() async {
     final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString(_kToken);
     _email = prefs.getString(_kEmail);
     _name = prefs.getString(_kName);
+    _emailVerified = prefs.getBool(_kVerified) ?? false;
+
+    // 遷移：舊版明文 prefs token → secure storage，並刪除 prefs 複本
+    final legacy = prefs.getString(_kToken);
+    var token = await _secure.read(key: _kToken);
+    if ((token == null || token.isEmpty) &&
+        legacy != null &&
+        legacy.isNotEmpty) {
+      await _secure.write(key: _kToken, value: legacy);
+      await prefs.remove(_kToken);
+      token = legacy;
+    } else if (legacy != null) {
+      await prefs.remove(_kToken);
+    }
+
+    _token = token;
     _ready = true;
     notifyListeners();
   }
 
   Future<void> _persist(String token, ParentUser user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kToken, token);
+    await _secure.write(key: _kToken, value: token);
+    await prefs.remove(_kToken);
     await prefs.setString(_kEmail, user.email);
     await prefs.setString(_kName, user.name);
+    await prefs.setBool(_kVerified, user.emailVerified);
     _token = token;
     _email = user.email;
     _name = user.name;
+    _emailVerified = user.emailVerified;
     notifyListeners();
   }
 
   Future<void> _clearPrefs() async {
     final prefs = await SharedPreferences.getInstance();
+    await _secure.delete(key: _kToken);
     await prefs.remove(_kToken);
     await prefs.remove(_kEmail);
     await prefs.remove(_kName);
+    await prefs.remove(_kVerified);
     _token = null;
     _email = null;
     _name = null;
+    _emailVerified = false;
     notifyListeners();
   }
 
@@ -174,7 +214,7 @@ class ParentAuthProvider extends ChangeNotifier {
     await _clearPrefs();
   }
 
-  /// 啟動時可選：驗證 token 是否仍有效。
+  /// 啟動時可選：驗證 token 是否仍有效，並同步 email 驗證狀態。
   Future<void> refreshMe() async {
     final t = _token;
     if (t == null || !_ready) return;
@@ -183,13 +223,34 @@ class ParentAuthProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kEmail, user.email);
       await prefs.setString(_kName, user.name);
+      await prefs.setBool(_kVerified, user.emailVerified);
       _email = user.email;
       _name = user.name;
+      _emailVerified = user.emailVerified;
       notifyListeners();
     } on ParentAuthException {
       await _clearPrefs();
     } catch (_) {
       // 離線時略過
+    }
+  }
+
+  Future<bool> resendVerificationEmail() async {
+    final t = _token;
+    if (t == null) return false;
+    _lastError = null;
+    notifyListeners();
+    try {
+      await _api.resendVerificationEmail(t);
+      return true;
+    } on ParentAuthException catch (e) {
+      _lastError = e.message;
+      return false;
+    } catch (_) {
+      _lastError = '網路錯誤，請稍後再試';
+      return false;
+    } finally {
+      notifyListeners();
     }
   }
 }

@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
  * 題庫系統（Content）— 課程、單元、題目、快照。
  *
  * 對外路徑：`GET /api/v1/content/*`（見 `routes/api.php`）。
+ *
+ * 公開端點僅回傳免費（非 premium）內容；premium 需日後訂閱／授權後另開。
+ * 離線 App 評分仍需要 correct_index（題目亦已打包於客戶端）；勿再以 query 繞過付費牆。
  */
 class CurriculumController extends Controller
 {
@@ -42,7 +45,8 @@ class CurriculumController extends Controller
     {
         $query = Lesson::query()
             ->with(['subject:id,code,name', 'vocabularyItems:id,lesson_id,term,meaning,example,sort'])
-            ->where('is_published', true);
+            ->where('is_published', true)
+            ->where('is_premium', false);
 
         if ($request->filled('subject')) {
             $subjectCode = $request->string('subject');
@@ -83,10 +87,12 @@ class CurriculumController extends Controller
             'questions' => fn ($q) => $q
                 ->where('is_published', true)
                 ->where('approval_status', Question::APPROVAL_APPROVED)
+                ->where('is_premium', false)
                 ->orderBy('sort'),
         ])
             ->where('code', $code)
             ->where('is_published', true)
+            ->where('is_premium', false)
             ->firstOrFail();
 
         return response()->json([
@@ -97,18 +103,16 @@ class CurriculumController extends Controller
     /**
      * 題目列表（給「複習」「每日複習」使用）
      *
-     * 可用參數：subject, grade, lesson, difficulty, include_premium, limit
+     * 可用參數：subject, grade, lesson, difficulty, limit
+     * （已移除 include_premium：公開 API 永不回傳付費題）
      */
     public function questions(Request $request): JsonResponse
     {
         $query = Question::query()
             ->with(['subject:id,code,name'])
             ->where('is_published', true)
-            ->where('approval_status', Question::APPROVAL_APPROVED);
-
-        if (! $request->boolean('include_premium', false)) {
-            $query->where('is_premium', false);
-        }
+            ->where('approval_status', Question::APPROVAL_APPROVED)
+            ->where('is_premium', false);
 
         if ($request->filled('subject')) {
             $query->whereHas('subject', fn ($q) => $q->where('code', $request->string('subject')));
@@ -146,6 +150,7 @@ class CurriculumController extends Controller
         $subjects = Subject::query()->where('is_active', true)->orderBy('sort')->get();
         $lessons = Lesson::with('vocabularyItems')
             ->where('is_published', true)
+            ->where('is_premium', false)
             ->orderBy('subject_id')
             ->orderBy('grade')
             ->get();

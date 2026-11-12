@@ -14,7 +14,23 @@ abstract final class LearningActivityTypes {
   static const String gameWordRain = 'game_word_rain';
 }
 
-/// 上傳單筆答題／遊戲成績（需家長 Sanctum token）。
+/// 單題作答（伺服器依 `question_code` 對題庫評分）。
+class LearningAnswer {
+  const LearningAnswer({
+    required this.questionCode,
+    required this.selectedIndex,
+  });
+
+  final String questionCode;
+  final int selectedIndex;
+
+  Map<String, dynamic> toJson() => {
+        'question_code': questionCode,
+        'selected_index': selectedIndex,
+      };
+}
+
+/// 上傳單筆答題／遊戲成績（需家長 Sanctum token + Email 已驗證）。
 class LearningRecordsApi {
   LearningRecordsApi({http.Client? client, String? baseUrl})
       : _client = client ?? http.Client(),
@@ -32,6 +48,7 @@ class LearningRecordsApi {
       };
 
   /// 以 `device_local_id`（本機孩子 profile id）對應雲端學生。
+  /// 測驗／複習請帶 [answers]；雲端題庫題目由伺服器評分。
   Future<void> submit({
     required String token,
     required String deviceLocalId,
@@ -40,6 +57,7 @@ class LearningRecordsApi {
     String? title,
     required int correctCount,
     required int questionCount,
+    List<LearningAnswer>? answers,
     int? durationSeconds,
     Map<String, dynamic>? meta,
     String? clientSubmissionId,
@@ -56,6 +74,9 @@ class LearningRecordsApi {
     }
     if (title != null && title.isNotEmpty) {
       body['title'] = title;
+    }
+    if (answers != null && answers.isNotEmpty) {
+      body['answers'] = answers.map((a) => a.toJson()).toList();
     }
     if (durationSeconds != null) {
       body['duration_seconds'] = durationSeconds;
@@ -85,6 +106,14 @@ class LearningRecordsApi {
       throw LearningRecordApiException('找不到雲端學生，請確認已登入家長帳號並同步孩子。');
     }
     if (res.statusCode == 403) {
+      String? code;
+      try {
+        final m = jsonDecode(res.body);
+        if (m is Map && m['code'] is String) code = m['code'] as String;
+      } catch (_) {}
+      if (code == 'email_unverified') {
+        throw LearningRecordApiException('請先完成 Email 驗證');
+      }
       throw LearningRecordApiException('無權限上傳');
     }
     if (res.statusCode < 200 || res.statusCode >= 300) {

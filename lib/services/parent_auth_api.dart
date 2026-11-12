@@ -10,19 +10,27 @@ class ParentUser {
     required this.name,
     required this.email,
     required this.role,
+    this.emailVerified = false,
   });
 
   final int id;
   final String name;
   final String email;
   final String role;
+  final bool emailVerified;
 
   factory ParentUser.fromJson(Map<String, dynamic> json) {
+    final verifiedFlag = json['email_verified'];
+    final verifiedAt = json['email_verified_at'];
+    final verified = verifiedFlag is bool
+        ? verifiedFlag
+        : (verifiedAt != null && verifiedAt.toString().isNotEmpty);
     return ParentUser(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       email: json['email'] as String,
       role: json['role'] as String,
+      emailVerified: verified,
     );
   }
 }
@@ -66,6 +74,14 @@ class ParentAuthException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// 教師邀請 QR。連結 24 小時內有效，成功加入後即作廢。
+class TeacherInviteLink {
+  const TeacherInviteLink({required this.url, this.expiresAt});
+
+  final String url;
+  final DateTime? expiresAt;
 }
 
 /// App 家長帳號 API（對應 Laravel `POST /api/v1/user/*`）。
@@ -206,7 +222,7 @@ class ParentAuthApi {
   }
 
   /// 取得讓教師掃描加入的邀請網址（QR 內容）。`regenerate: true` 會作廢舊 QR。
-  Future<String> teacherInviteJoinUrl(
+  Future<TeacherInviteLink> teacherInviteJoinUrl(
     String token, {
     required int studentId,
     bool regenerate = false,
@@ -223,6 +239,20 @@ class ParentAuthApi {
     if (res.statusCode == 401) {
       throw ParentAuthException('登入已過期，請重新登入。');
     }
+    if (res.statusCode == 403) {
+      try {
+        final body = jsonDecode(res.body);
+        if (body is Map && body['code'] == 'email_unverified') {
+          throw ParentAuthException('請先完成 Email 驗證後再產生邀請。');
+        }
+        if (body is Map && body['message'] is String) {
+          throw ParentAuthException(body['message'] as String);
+        }
+      } catch (e) {
+        if (e is ParentAuthException) rethrow;
+      }
+      throw ParentAuthException('無權限產生邀請連結');
+    }
     if (res.statusCode == 422 && jsonDecode(res.body) is Map<String, dynamic>) {
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       throw ParentAuthException(_firstValidationMessage(body) ?? '資料驗證失敗');
@@ -236,7 +266,11 @@ class ParentAuthApi {
     if (url == null || url.isEmpty) {
       throw ParentAuthException('回應缺少 join_url');
     }
-    return url;
+    final rawExpiry = data?['expires_at'] as String?;
+    return TeacherInviteLink(
+      url: url,
+      expiresAt: rawExpiry == null ? null : DateTime.tryParse(rawExpiry),
+    );
   }
 
   Future<void> logout(String token) async {
@@ -268,6 +302,21 @@ class ParentAuthApi {
     final data = body['data'] as Map<String, dynamic>;
     final u = data['user'] as Map<String, dynamic>;
     return ParentUser.fromJson(u);
+  }
+
+  Future<void> resendVerificationEmail(String token) async {
+    final res = await _client
+        .post(
+          _u('/user/email/resend'),
+          headers: _headers(token),
+        )
+        .timeout(ApiConfig.timeout);
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法重寄驗證信（${res.statusCode}）');
+    }
   }
 
   ParentAuthResult _parseAuthResponse(http.Response res) {

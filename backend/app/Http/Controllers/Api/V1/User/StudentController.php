@@ -109,6 +109,7 @@ class StudentController extends Controller
         return response()->json([
             'data' => [
                 'join_url' => $student->joinTeachingUrl(),
+                'expires_at' => $student->teacher_invite_expires_at?->toIso8601String(),
             ],
         ]);
     }
@@ -124,6 +125,6 @@ class StudentController extends Controller
 
     protected function authorizeParentStudent(User $user, Student $student): void
     {
-        abort_unless($student->parent_user_id === $user->id, 404);
+        abort_unless((int) $student->parent_user_id === (int) $user->id, 404);
     }
 }

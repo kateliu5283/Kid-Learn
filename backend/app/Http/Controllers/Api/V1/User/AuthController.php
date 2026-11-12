@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -54,6 +55,8 @@ class AuthController extends Controller
             $token = $user->createToken('kid-learn-app')->plainTextToken;
         });
 
+        $user->sendEmailVerificationNotification();
+
         return $this->authSuccessResponse($user, $token, 201);
     }
 
@@ -64,12 +67,27 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $throttleKey = 'parent-login:'.sha1(strtolower($data['email']).'|'.$request->ip());
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'email' => ["嘗試次數過多，請 {$seconds} 秒後再試。"],
+            ]);
+        }
+
         $user = User::query()->where('email', $data['email'])->first();
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
+        $passwordOk = $user
+            ? Hash::check($data['password'], $user->password)
+            : Hash::check($data['password'], $this->dummyPasswordHash());
+
+        if (! $user || ! $passwordOk) {
+            RateLimiter::hit($throttleKey, 15 * 60);
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
         }
+
+        RateLimiter::clear($throttleKey);
 
         if ($user->role !== User::ROLE_PARENT) {
             return response()->json([
@@ -77,6 +95,8 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // 撤銷舊 token，降低遺失裝置／外洩後長期濫用風險（單一有效 App session）
+        $user->tokens()->where('name', 'kid-learn-app')->delete();
         $token = $user->createToken('kid-learn-app')->plainTextToken;
 
         return $this->authSuccessResponse($user, $token);
@@ -102,6 +122,22 @@ class AuthController extends Controller
         ]);
     }
 
+    /** 重寄驗證信（已驗證則回 200）。 */
+    public function resendVerification(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        abort_unless($user->role === User::ROLE_PARENT, 403);
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'already_verified']);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'sent']);
+    }
+
     protected function authSuccessResponse(User $user, string $token, int $status = 200): JsonResponse
     {
         return response()->json([
@@ -110,7 +146,15 @@ class AuthController extends Controller
                 'token' => $token,
                 'students' => $this->studentsPayload($user),
             ],
-        ], $status);
+        ], $status)->header('Cache-Control', 'no-store');
+    }
+
+    /** 帳號不存在時仍做一次 bcrypt，避免以回應時間判斷 email 是否註冊。 */
+    protected function dummyPasswordHash(): string
+    {
+        static $hash = null;
+
+        return $hash ??= Hash::make('timing-dummy-not-a-user-password');
     }
 
     /**
@@ -140,6 +184,8 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'email_verified' => $user->hasVerifiedEmail(),
+            'email_verified_at' => $user->email_verified_at?->toIso8601String(),
         ];
     }
 }

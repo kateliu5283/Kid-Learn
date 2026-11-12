@@ -11,12 +11,13 @@ class TeacherJoinController extends Controller
 {
     /**
      * 老師用手機掃描家長提供的 QR（內容為本站 join URL）後，登入教師後台即與該雲端學生建立關聯。
+     * 邀請連結 24 小時內有效，成功綁定後立即作廢。
      */
     public function __invoke(Request $request, string $token)
     {
-        $student = Student::query()->where('teacher_invite_token', $token)->first();
+        $student = Student::findByValidTeacherInviteToken($token);
         if ($student === null) {
-            abort(404, '邀請連結無效或已失效，請向家長索取新的 QR。');
+            abort(404, '邀請連結無效、已過期或已使用，請向家長索取新的 QR。');
         }
 
         $user = Auth::user();
@@ -26,7 +27,9 @@ class TeacherJoinController extends Controller
                     ->view('join-teaching-wrong-role', ['studentName' => $student->name], 403);
             }
 
-            $user->taughtStudents()->syncWithoutDetaching([$student->id]);
+            if (! Student::claimTeacherInvite($user, $token)) {
+                abort(404, '邀請連結無效、已過期或已使用，請向家長索取新的 QR。');
+            }
 
             return redirect('/teacher');
         }
