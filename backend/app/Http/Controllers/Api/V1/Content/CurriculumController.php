@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\Subject;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -108,11 +109,7 @@ class CurriculumController extends Controller
      */
     public function questions(Request $request): JsonResponse
     {
-        $query = Question::query()
-            ->with(['subject:id,code,name'])
-            ->where('is_published', true)
-            ->where('approval_status', Question::APPROVAL_APPROVED)
-            ->where('is_premium', false);
+        $query = $this->publicQuestions()->with(['subject:id,code,name']);
 
         if ($request->filled('subject')) {
             $query->whereHas('subject', fn ($q) => $q->where('code', $request->string('subject')));
@@ -154,10 +151,7 @@ class CurriculumController extends Controller
             ->orderBy('subject_id')
             ->orderBy('grade')
             ->get();
-        $questions = Question::where('is_published', true)
-            ->where('approval_status', Question::APPROVAL_APPROVED)
-            ->where('is_premium', false)
-            ->get();
+        $questions = $this->publicQuestions()->get();
 
         return response()->json([
             'subjects' => $subjects,
@@ -168,6 +162,26 @@ class CurriculumController extends Controller
                 'version' => config('app.curriculum_version', '1.0.0'),
             ],
         ]);
+    }
+
+    /**
+     * 免費、已上架、已核准，且不掛在付費或未上架課程上的題目。
+     * 仍含 correct_index，供離線評分。include_premium 這類參數不會放寬條件。
+     *
+     * @return Builder<Question>
+     */
+    protected function publicQuestions(): Builder
+    {
+        return Question::query()
+            ->where('is_published', true)
+            ->where('approval_status', Question::APPROVAL_APPROVED)
+            ->where('is_premium', false)
+            ->where(function (Builder $query): void {
+                $query->whereNull('lesson_id')
+                    ->orWhereHas('lesson', function (Builder $lesson): void {
+                        $lesson->where('is_published', true)->where('is_premium', false);
+                    });
+            });
     }
 
     protected function transformLesson(Lesson $lesson, bool $withQuestions = false): array

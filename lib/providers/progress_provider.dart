@@ -27,6 +27,21 @@ class ProgressProvider extends ChangeNotifier {
   bool _loaded = false;
 
   List<UserProfile> get profiles => List.unmodifiable(_profiles);
+
+  /// 上傳雲端時用的孩子清單（不含尚未建立的訪客檔）。
+  List<Map<String, dynamic>> profilesForCloudSync() {
+    return [
+      for (final p in _profiles)
+        if (p.id != 'guest')
+          {
+            'name': p.name,
+            'grade': p.grade,
+            'avatar': p.avatar,
+            'device_local_id': p.id,
+          },
+    ];
+  }
+
   bool get loaded => _loaded;
   bool get hasAnyProfile => _profiles.isNotEmpty;
 

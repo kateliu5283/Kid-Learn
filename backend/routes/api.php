@@ -44,6 +44,8 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:6,1');
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('user/logout', [AuthController::class, 'logout']);
+        Route::get('user/sessions', [AuthController::class, 'sessions']);
+        Route::post('user/sessions/logout-others', [AuthController::class, 'logoutOtherDevices']);
         Route::get('user/me', [AuthController::class, 'me']);
         Route::post('user/email/resend', [AuthController::class, 'resendVerification'])
             ->middleware('throttle:6,1');
@@ -51,11 +53,14 @@ Route::prefix('v1')->group(function () {
         Route::delete('user/account', [AuthController::class, 'destroyAccount'])
             ->middleware('throttle:6,1');
         Route::get('user/students', [StudentController::class, 'index']);
-        Route::post('user/students', [StudentController::class, 'store']);
-        Route::put('user/students/{student}', [StudentController::class, 'update']);
+        Route::post('user/students', [StudentController::class, 'store'])
+            ->middleware('parent.verified');
+        Route::put('user/students/{student}', [StudentController::class, 'update'])
+            ->middleware('parent.verified');
         Route::post('user/students/{student}/teacher-invite', [StudentController::class, 'teacherInvite'])
             ->middleware('parent.verified');
-        Route::delete('user/students/{student}', [StudentController::class, 'destroy']);
+        Route::delete('user/students/{student}', [StudentController::class, 'destroy'])
+            ->middleware('parent.verified');
         Route::post('learning/records', [LearningRecordController::class, 'store'])
             ->middleware('parent.verified');
         Route::get('learning/progress', [LearningRecordController::class, 'progress'])

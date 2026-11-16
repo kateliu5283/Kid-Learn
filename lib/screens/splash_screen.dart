@@ -38,11 +38,11 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     final token = auth.token;
     if (auth.isSignedIn && auth.isEmailVerified && token != null) {
-      final pull = LearningProgressSync.pull(token: token, progress: provider);
+      final sync = _syncVerifiedAccount(auth, provider);
       if (!provider.hasAnyProfile) {
-        await pull;
+        await sync;
       } else {
-        unawaited(pull);
+        unawaited(sync);
       }
     }
     if (!mounted) return;
@@ -58,6 +58,16 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(builder: (_) => const MainScaffold()),
       );
     }
+  }
+
+  Future<void> _syncVerifiedAccount(
+    ParentAuthProvider auth,
+    ProgressProvider progress,
+  ) async {
+    await auth.syncLocalStudents(progress.profilesForCloudSync());
+    final token = auth.token;
+    if (token == null || !auth.isEmailVerified) return;
+    await LearningProgressSync.pull(token: token, progress: progress);
   }
 
   @override

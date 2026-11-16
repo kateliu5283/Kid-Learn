@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * App 端「家長」帳號（僅 role=parent）。教師／管理者請使用 Filament 網頁後台。
@@ -24,6 +26,8 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'device_id' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{8,64}$/'],
+            'device_label' => ['nullable', 'string', 'max:24'],
             'students' => ['nullable', 'array', 'max:20'],
             'students.*.name' => ['required_with:students', 'string', 'max:120'],
             'students.*.grade' => ['nullable', 'integer', 'min:1', 'max:6'],
@@ -53,7 +57,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            $token = $user->createToken('kid-learn-app')->plainTextToken;
+            $token = $this->issueAppToken($user, $data);
         });
 
         $user->sendEmailVerificationNotification();
@@ -66,6 +70,8 @@ class AuthController extends Controller
         $data = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'device_id' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{8,64}$/'],
+            'device_label' => ['nullable', 'string', 'max:24'],
         ]);
 
         $throttleKey = 'parent-login:'.sha1(strtolower($data['email']).'|'.$request->ip());
@@ -96,9 +102,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // 撤銷舊 token，降低遺失裝置／外洩後長期濫用風險（單一有效 App session）
-        $user->tokens()->where('name', 'kid-learn-app')->delete();
-        $token = $user->createToken('kid-learn-app')->plainTextToken;
+        $token = $this->issueAppToken($user, $data);
 
         return $this->authSuccessResponse($user, $token);
     }
@@ -108,6 +112,57 @@ class AuthController extends Controller
         $request->user()?->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'ok']);
+    }
+
+    /** 這位家長目前的 App 登入（不含網頁後台 session）。 */
+    public function sessions(Request $request): JsonResponse
+    {
+        $user = $this->requireParent($request);
+        $currentId = $this->currentTokenId($user);
+
+        $rows = $user->tokens()
+            ->orderByDesc('last_used_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function ($token) use ($currentId) {
+                $label = $this->appTokenLabel($token->name);
+                if ($label === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $token->id,
+                    'label' => $label,
+                    'current' => $token->id === $currentId,
+                    'last_used_at' => $token->last_used_at?->toIso8601String(),
+                    'created_at' => $token->created_at?->toIso8601String(),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return response()->json(['data' => $rows])->header('Cache-Control', 'no-store');
+    }
+
+    /** 撤銷其他 App 登入，這台裝置的 token 保留。 */
+    public function logoutOtherDevices(Request $request): JsonResponse
+    {
+        $user = $this->requireParent($request);
+        $currentId = $this->currentTokenId($user);
+
+        $ids = $user->tokens()
+            ->get(['id', 'name'])
+            ->filter(fn ($token) => $this->isAppToken($token->name) && $token->id !== $currentId)
+            ->pluck('id');
+
+        if ($ids->isNotEmpty()) {
+            $user->tokens()->whereIn('id', $ids)->delete();
+        }
+
+        return response()->json([
+            'message' => '已登出其他裝置。',
+            'revoked' => $ids->count(),
+        ]);
     }
 
     public function me(Request $request): JsonResponse
@@ -274,6 +329,87 @@ class AuthController extends Controller
         });
 
         return response()->json(['message' => '帳號已刪除。']);
+    }
+
+    /**
+     * 同一裝置重登只換掉該裝置的 token，其他裝置保持登入。最多保留 8 個 App token。
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function issueAppToken(User $user, array $data): string
+    {
+        $deviceId = is_string($data['device_id'] ?? null) && $data['device_id'] !== ''
+            ? $data['device_id']
+            : 'anon-'.Str::lower(Str::random(16));
+        $label = $this->cleanDeviceLabel($data['device_label'] ?? null);
+        $name = 'kid-learn:'.$deviceId.($label !== '' ? '|'.$label : '');
+
+        $user->tokens()->get(['id', 'name'])->each(function ($token) use ($deviceId): void {
+            $tokenName = (string) $token->name;
+            if ($tokenName === 'kid-learn:'.$deviceId || str_starts_with($tokenName, 'kid-learn:'.$deviceId.'|')) {
+                $token->delete();
+            }
+        });
+
+        $plain = $user->createToken($name)->plainTextToken;
+        $this->trimAppTokens($user, 8);
+
+        return $plain;
+    }
+
+    protected function trimAppTokens(User $user, int $max): void
+    {
+        $appTokens = $user->tokens()
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn ($token) => $this->isAppToken((string) $token->name))
+            ->values();
+
+        $extra = $appTokens->count() - $max;
+        if ($extra <= 0) {
+            return;
+        }
+
+        $appTokens->take($extra)->each->delete();
+    }
+
+    protected function isAppToken(string $name): bool
+    {
+        return $name === 'kid-learn-app' || str_starts_with($name, 'kid-learn:');
+    }
+
+    protected function appTokenLabel(string $name): ?string
+    {
+        if ($name === 'kid-learn-app') {
+            return '舊版 App';
+        }
+        if (! str_starts_with($name, 'kid-learn:')) {
+            return null;
+        }
+
+        $rest = substr($name, strlen('kid-learn:'));
+        $label = explode('|', $rest, 2)[1] ?? '';
+
+        return $label !== '' ? $label : 'App 裝置';
+    }
+
+    protected function cleanDeviceLabel(mixed $label): string
+    {
+        if (! is_string($label)) {
+            return '';
+        }
+
+        $label = trim(preg_replace('/\s+/u', ' ', str_replace('|', ' ', $label)) ?? '');
+
+        return mb_substr($label, 0, 24);
+    }
+
+    protected function currentTokenId(User $user): ?int
+    {
+        $token = $user->currentAccessToken();
+
+        return $token instanceof PersonalAccessToken ? $token->id : null;
     }
 
     protected function requireParent(Request $request): User

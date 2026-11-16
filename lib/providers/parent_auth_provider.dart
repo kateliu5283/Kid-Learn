@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/app_device.dart';
 import '../services/parent_auth_api.dart';
 
 const _kToken = 'parent_auth_token_v1';
@@ -119,14 +120,18 @@ class ParentAuthProvider extends ChangeNotifier {
     _lastError = null;
     notifyListeners();
     try {
+      final device = await _device();
       final r = await _api.register(
         name: name,
         email: email,
         password: password,
         passwordConfirmation: passwordConfirmation,
         students: students,
+        deviceId: device?.id,
+        deviceLabel: device?.label,
       );
-      if (localProfilesForMergeAfterAuth != null &&
+      if (r.user.emailVerified &&
+          localProfilesForMergeAfterAuth != null &&
           localProfilesForMergeAfterAuth.isNotEmpty) {
         await _mergeLocalStudentsMissingOnCloud(
           token: r.token,
@@ -156,8 +161,14 @@ class ParentAuthProvider extends ChangeNotifier {
     _lastError = null;
     notifyListeners();
     try {
-      final r = await _api.login(email: email, password: password);
-      if (localProfilesForMergeAfterAuth.isNotEmpty) {
+      final device = await _device();
+      final r = await _api.login(
+        email: email,
+        password: password,
+        deviceId: device?.id,
+        deviceLabel: device?.label,
+      );
+      if (r.user.emailVerified && localProfilesForMergeAfterAuth.isNotEmpty) {
         await _mergeLocalStudentsMissingOnCloud(
           token: r.token,
           initialRemote: r.remoteStudents,
@@ -174,6 +185,49 @@ class ParentAuthProvider extends ChangeNotifier {
       return false;
     } finally {
       notifyListeners();
+    }
+  }
+
+  /// 已驗證後，把本機有、雲端還沒有的孩子補上。未驗證或失敗時略過。
+  Future<void> syncLocalStudents(
+    List<Map<String, dynamic>> localProfiles,
+  ) async {
+    final t = _token;
+    if (t == null || !_emailVerified || localProfiles.isEmpty) return;
+    try {
+      final remote = await _api.listStudents(t);
+      await _mergeLocalStudentsMissingOnCloud(
+        token: t,
+        initialRemote: remote,
+        localProfiles: localProfiles,
+      );
+    } catch (_) {}
+  }
+
+  /// 登出其他裝置。回傳被撤銷的數量；失敗時寫入 [lastError] 並回 null。
+  Future<int?> logoutOtherDevices() async {
+    final t = _token;
+    if (t == null) return null;
+    _lastError = null;
+    notifyListeners();
+    try {
+      return await _api.logoutOtherDevices(t);
+    } on ParentAuthException catch (e) {
+      _lastError = e.message;
+      return null;
+    } catch (_) {
+      _lastError = '網路錯誤，請稍後再試';
+      return null;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<({String id, String label})?> _device() async {
+    try {
+      return await AppDevice.identity(_secure);
+    } catch (_) {
+      return null;
     }
   }
 

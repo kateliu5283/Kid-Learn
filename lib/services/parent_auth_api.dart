@@ -112,6 +112,8 @@ class ParentAuthApi {
     required String password,
     required String passwordConfirmation,
     List<Map<String, dynamic>>? students,
+    String? deviceId,
+    String? deviceLabel,
   }) async {
     final body = <String, dynamic>{
       'name': name,
@@ -119,6 +121,7 @@ class ParentAuthApi {
       'password': password,
       'password_confirmation': passwordConfirmation,
     };
+    _putDevice(body, deviceId, deviceLabel);
     if (students != null && students.isNotEmpty) {
       body['students'] = students;
     }
@@ -135,15 +138,19 @@ class ParentAuthApi {
   Future<ParentAuthResult> login({
     required String email,
     required String password,
+    String? deviceId,
+    String? deviceLabel,
   }) async {
+    final body = <String, dynamic>{
+      'email': email,
+      'password': password,
+    };
+    _putDevice(body, deviceId, deviceLabel);
     final res = await _client
         .post(
           _u('/user/login'),
           headers: _headers(null),
-          body: jsonEncode({
-            'email': email,
-            'password': password,
-          }),
+          body: jsonEncode(body),
         )
         .timeout(ApiConfig.timeout);
     return _parseAuthResponse(res);
@@ -188,6 +195,18 @@ class ParentAuthApi {
         throw ParentAuthException(msg ?? '資料驗證失敗');
       }
       throw ParentAuthException('資料驗證失敗');
+    }
+    if (res.statusCode == 403) {
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(res.body);
+      } catch (_) {
+        throw ParentAuthException('無權限新增學生');
+      }
+      if (decoded is Map && decoded['code'] == 'email_unverified') {
+        throw ParentAuthException('請先完成 Email 驗證後再同步孩子。');
+      }
+      throw ParentAuthException('無權限新增學生');
     }
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw ParentAuthException('無法新增學生（${res.statusCode}）');
@@ -271,6 +290,28 @@ class ParentAuthApi {
       url: url,
       expiresAt: rawExpiry == null ? null : DateTime.tryParse(rawExpiry),
     );
+  }
+
+  /// 撤銷其他裝置的 App 登入，回傳被登出的數量。這台裝置保持登入。
+  Future<int> logoutOtherDevices(String token) async {
+    final res = await _client
+        .post(
+          _u('/user/sessions/logout-others'),
+          headers: _headers(token),
+          body: jsonEncode(<String, dynamic>{}),
+        )
+        .timeout(ApiConfig.timeout);
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法登出其他裝置（${res.statusCode}）');
+    }
+    final decoded = jsonDecode(res.body);
+    if (decoded is Map && decoded['revoked'] is num) {
+      return (decoded['revoked'] as num).toInt();
+    }
+    return 0;
   }
 
   Future<void> logout(String token) async {
@@ -377,6 +418,15 @@ class ParentAuthApi {
     }
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw ParentAuthException('無法重寄驗證信（${res.statusCode}）');
+    }
+  }
+
+  void _putDevice(Map<String, dynamic> body, String? deviceId, String? deviceLabel) {
+    if (deviceId != null && deviceId.isNotEmpty) {
+      body['device_id'] = deviceId;
+    }
+    if (deviceLabel != null && deviceLabel.isNotEmpty) {
+      body['device_label'] = deviceLabel;
     }
   }
 

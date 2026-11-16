@@ -639,6 +639,12 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                                     if (!context.mounted) return;
                                     if (auth.isEmailVerified &&
                                         auth.token != null) {
+                                      await auth.syncLocalStudents(
+                                        context
+                                            .read<ProgressProvider>()
+                                            .profilesForCloudSync(),
+                                      );
+                                      if (!context.mounted) return;
                                       await _restoreProgress(context,
                                           quiet: true);
                                     }
@@ -677,7 +683,7 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
               ],
               const SizedBox(height: 4),
               const Text(
-                '已驗證的帳號會在登入後，把各課程的完成與星星從雲端還原到這台裝置。換手機時用同一個 Email 登入即可。',
+                '已驗證的帳號可在多台裝置同時登入。登入後會還原各課程的完成與星星；若手機遺失，請按「登出其他裝置」。',
                 style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
               ),
               const SizedBox(height: 12),
@@ -696,6 +702,11 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                     onPressed: _busy ? null : () => _exportAccount(context),
                     icon: const Icon(Icons.ios_share, size: 18),
                     label: const Text('匯出我的資料'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _busy ? null : () => _logoutOtherDevices(context),
+                    icon: const Icon(Icons.devices, size: 18),
+                    label: const Text('登出其他裝置'),
                   ),
                   OutlinedButton.icon(
                     onPressed: _busy
@@ -855,19 +866,8 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
 
   Future<void> _submit(BuildContext context) async {
     final auth = context.read<ParentAuthProvider>();
-    final localPayload = context
-        .read<ProgressProvider>()
-        .profiles
-        .where((p) => p.id != 'guest')
-        .map(
-          (p) => <String, dynamic>{
-            'name': p.name,
-            'grade': p.grade,
-            'avatar': p.avatar,
-            'device_local_id': p.id,
-          },
-        )
-        .toList();
+    final localPayload =
+        context.read<ProgressProvider>().profilesForCloudSync();
     setState(() => _busy = true);
     bool ok;
     if (_registerMode) {
@@ -928,6 +928,42 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
     final err = context.read<ParentAuthProvider>().lastError;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message ?? err ?? '無法寄出信件')),
+    );
+  }
+
+  Future<void> _logoutOtherDevices(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('登出其他裝置'),
+        content: const Text('其他手機或平板的家長登入會失效。這台裝置保持登入。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('登出'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    setState(() => _busy = true);
+    final revoked =
+        await context.read<ParentAuthProvider>().logoutOtherDevices();
+    if (!context.mounted) return;
+    setState(() => _busy = false);
+    final err = context.read<ParentAuthProvider>().lastError;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          revoked == null
+              ? (err ?? '無法登出其他裝置')
+              : (revoked == 0 ? '沒有其他登入中的裝置' : '已登出 $revoked 台其他裝置'),
+        ),
+      ),
     );
   }
 
