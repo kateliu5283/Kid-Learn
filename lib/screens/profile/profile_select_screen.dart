@@ -179,6 +179,8 @@ class ProfileSelectScreen extends StatelessWidget {
     }
 
     final progress = context.read<ProgressProvider>();
+    await latest.syncLocalStudents(progress.profilesForCloudSync());
+    if (!context.mounted) return;
     final ok = await LearningProgressSync.pull(
       token: latest.token!,
       progress: progress,

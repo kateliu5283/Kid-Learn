@@ -349,6 +349,34 @@ class ParentAuthProvider extends ChangeNotifier {
     }
   }
 
+  /// 更換密碼。成功後這台裝置仍保持登入。
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final t = _token;
+    if (t == null) return false;
+    _lastError = null;
+    notifyListeners();
+    try {
+      await _api.changePassword(
+        t,
+        currentPassword: currentPassword,
+        password: newPassword,
+        passwordConfirmation: newPassword,
+      );
+      return true;
+    } on ParentAuthException catch (e) {
+      _lastError = e.message;
+      return false;
+    } catch (_) {
+      _lastError = '網路錯誤，請稍後再試';
+      return false;
+    } finally {
+      notifyListeners();
+    }
+  }
+
   /// 刪除雲端家長帳號。成功後清除本機登入狀態。
   Future<bool> deleteAccount({required String password}) async {
     final t = _token;

@@ -290,6 +290,57 @@ class AuthController extends Controller
     }
 
     /**
+     * 已登入家長更換密碼。這台裝置的 token 保留，其他 App token 撤銷。
+     * 不要求 Email 已驗證。
+     */
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $user = $this->requireParent($request);
+
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'current_password.required' => '請輸入目前的密碼。',
+            'password.required' => '請輸入新密碼。',
+            'password.min' => '新密碼至少 8 個字元。',
+            'password.confirmed' => '兩次輸入的新密碼不一致。',
+        ]);
+
+        $throttleKey = 'parent-password:'.$user->id;
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return response()->json([
+                'message' => "嘗試次數過多，請 {$seconds} 秒後再試。",
+            ], 429);
+        }
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            RateLimiter::hit($throttleKey, 15 * 60);
+            throw ValidationException::withMessages([
+                'current_password' => ['目前密碼不正確。'],
+            ]);
+        }
+
+        if (Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['新密碼不能與目前密碼相同。'],
+            ]);
+        }
+
+        RateLimiter::clear($throttleKey);
+        $user->forceFill(['password' => $data['password']])->save();
+
+        $currentId = $this->currentTokenId($user);
+        if ($currentId !== null) {
+            $user->tokens()->where('id', '!=', $currentId)->delete();
+        }
+
+        return response()->json(['message' => '密碼已更新。']);
+    }
+
+    /**
      * 刪除家長帳號。孩子、學習紀錄與登入 token 一併移除。
      */
     public function destroyAccount(Request $request): JsonResponse

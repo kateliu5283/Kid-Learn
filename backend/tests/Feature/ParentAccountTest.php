@@ -192,4 +192,62 @@ class ParentAccountTest extends TestCase
             'Authorization' => 'Bearer '.$token,
         ])->assertUnauthorized();
     }
+
+    public function test_parent_can_change_password_and_keep_only_the_current_device(): void
+    {
+        $parent = User::factory()->unverified()->create([
+            'role' => User::ROLE_PARENT,
+            'password' => 'old-password',
+        ]);
+        $phone = $parent->createToken('kid-learn:phone|iPhone')->plainTextToken;
+        $tablet = $parent->createToken('kid-learn:tablet|iPad')->plainTextToken;
+
+        $this->putJson('/api/v1/user/password', [
+            'current_password' => 'nope',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ], [
+            'Authorization' => 'Bearer '.$phone,
+        ])->assertStatus(422);
+
+        $this->putJson('/api/v1/user/password', [
+            'current_password' => 'old-password',
+            'password' => 'old-password',
+            'password_confirmation' => 'old-password',
+        ], [
+            'Authorization' => 'Bearer '.$phone,
+        ])->assertStatus(422);
+
+        $this->putJson('/api/v1/user/password', [
+            'current_password' => 'old-password',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ], [
+            'Authorization' => 'Bearer '.$phone,
+        ])->assertOk()->assertJsonPath('message', '密碼已更新。');
+
+        $this->assertTrue(Hash::check('new-password', $parent->fresh()->password));
+
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/v1/user/me', [
+            'Authorization' => 'Bearer '.$phone,
+        ])->assertOk();
+
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/v1/user/me', [
+            'Authorization' => 'Bearer '.$tablet,
+        ])->assertUnauthorized();
+
+        $this->postJson('/api/v1/user/login', [
+            'email' => $parent->email,
+            'password' => 'new-password',
+            'device_id' => 'phone1234',
+        ])->assertOk();
+
+        $this->postJson('/api/v1/user/login', [
+            'email' => $parent->email,
+            'password' => 'old-password',
+            'device_id' => 'phone1234',
+        ])->assertStatus(422);
+    }
 }

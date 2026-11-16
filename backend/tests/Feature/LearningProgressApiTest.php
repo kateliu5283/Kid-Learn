@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\StudentLearningRecord;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -96,6 +97,105 @@ class LearningProgressApiTest extends TestCase
         $this->assertIsString($encoded);
         $this->assertStringNotContainsString('secret_lesson', $encoded);
         $this->assertStringNotContainsString('別人的孩子', $encoded);
+    }
+
+    public function test_progress_includes_daily_review_games_and_taipei_study_dates(): void
+    {
+        $parent = User::factory()->create(['role' => User::ROLE_PARENT]);
+        $student = $parent->students()->create([
+            'name' => '小華',
+            'grade' => 2,
+            'device_local_id' => 'p-local',
+            'sort' => 0,
+        ]);
+
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'lesson_quiz',
+            'context_key' => 'math_g1_u1',
+            'correct_count' => 9,
+            'question_count' => 10,
+            'recorded_at' => Carbon::parse('2026-11-14 10:00:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'daily_review',
+            'context_key' => 'math',
+            'correct_count' => 8,
+            'question_count' => 10,
+            'recorded_at' => Carbon::parse('2026-11-16 00:10:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'daily_review',
+            'context_key' => 'math',
+            'correct_count' => 6,
+            'question_count' => 10,
+            'recorded_at' => Carbon::parse('2026-11-16 01:00:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'game_math_blitz',
+            'correct_count' => 12,
+            'question_count' => 20,
+            'duration_seconds' => 60,
+            'recorded_at' => Carbon::parse('2026-11-16 00:20:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'game_math_blitz',
+            'correct_count' => 18,
+            'question_count' => 20,
+            'duration_seconds' => 60,
+            'recorded_at' => Carbon::parse('2026-11-16 00:30:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'game_memory_match',
+            'correct_count' => 6,
+            'question_count' => 6,
+            'duration_seconds' => 40,
+            'recorded_at' => Carbon::parse('2026-11-16 00:40:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'game_memory_match',
+            'correct_count' => 6,
+            'question_count' => 6,
+            'duration_seconds' => 25,
+            'recorded_at' => Carbon::parse('2026-11-16 00:50:00', 'Asia/Taipei'),
+        ]);
+        StudentLearningRecord::query()->create([
+            'student_id' => $student->id,
+            'activity_type' => 'game_word_rain',
+            'correct_count' => 9,
+            'question_count' => 9,
+            'recorded_at' => Carbon::parse('2026-11-16 01:10:00', 'Asia/Taipei'),
+        ]);
+
+        $token = $parent->createToken('kid-learn-app')->plainTextToken;
+        $res = $this->getJson('/api/v1/learning/progress', [
+            'Authorization' => 'Bearer '.$token,
+        ]);
+
+        $res->assertOk()
+            ->assertJsonPath('data.0.lessons.0.lesson_id', 'math_g1_u1')
+            ->assertJsonCount(1, 'data.0.lessons')
+            ->assertJsonPath('data.0.study_dates', ['2026-11-14', '2026-11-16']);
+
+        $activities = collect($res->json('data.0.activities'))->keyBy('activity_type');
+        $this->assertFalse($activities->has('lesson_quiz'));
+        $this->assertFalse($activities->has('lesson_review'));
+        $this->assertSame(8, $activities['daily_review']['best_correct']);
+        $this->assertSame(80, $activities['daily_review']['best_percent']);
+        $this->assertSame(2, $activities['daily_review']['attempts']);
+        $this->assertSame('math', $activities['daily_review']['context_key']);
+        $this->assertSame(18, $activities['game_math_blitz']['best_correct']);
+        $this->assertSame(2, $activities['game_math_blitz']['attempts']);
+        $this->assertNull($activities['game_math_blitz']['best_duration_seconds']);
+        $this->assertSame(25, $activities['game_memory_match']['best_duration_seconds']);
+        $this->assertSame(2, $activities['game_memory_match']['attempts']);
+        $this->assertSame(9, $activities['game_word_rain']['best_correct']);
     }
 
     public function test_unverified_parent_cannot_read_progress(): void

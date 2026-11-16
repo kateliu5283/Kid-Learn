@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../curriculum/curriculum.dart';
+import '../models/activity_stats.dart';
 import '../providers/progress_provider.dart';
+import '../services/learning_records_api.dart';
 import '../theme/app_theme.dart';
 
 class AchievementsScreen extends StatelessWidget {
@@ -59,6 +61,8 @@ class AchievementsScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          _PracticeSummary(progress: progress),
           const SizedBox(height: 24),
           const Text(
             '徽章牆',
@@ -190,6 +194,107 @@ class AchievementsScreen extends StatelessWidget {
       _Badge('全能王', Icons.diamond,
           const Color(0xFF26C6DA), completed >= kLessons.length),
     ];
+  }
+}
+
+class _PracticeSummary extends StatelessWidget {
+  const _PracticeSummary({required this.progress});
+
+  final ProgressProvider progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = progress.activityOf(progress.profile.id);
+    final streak = progress.studyStreakOf(progress.profile.id);
+    final daily = stats.activities.where(
+      (a) => a.activityType == LearningActivityTypes.dailyReview,
+    );
+    final math = stats.activities.where(
+      (a) => a.activityType == LearningActivityTypes.gameMathBlitz,
+    );
+    final memory = stats.activities.where(
+      (a) => a.activityType == LearningActivityTypes.gameMemoryMatch,
+    );
+    final rain = stats.activities.where(
+      (a) => a.activityType == LearningActivityTypes.gameWordRain,
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '連續學習 $streak 天',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            _practiceRow('每日複習', _dailyLabel(daily)),
+            _practiceRow('數學快閃', _scoreLabel(math)),
+            _practiceRow('單字雨', _scoreLabel(rain)),
+            _practiceRow('記憶翻牌', _memoryLabel(memory)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _practiceRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          Text(value, style: const TextStyle(color: Colors.black54)),
+        ],
+      ),
+    );
+  }
+
+  String _dailyLabel(Iterable<ActivitySnapshot> items) {
+    final list = items.toList();
+    if (list.isEmpty) return '尚未挑戰';
+    final attempts = list.fold<int>(0, (sum, item) => sum + item.attempts);
+    final best = list.fold<int?>(null, (best, item) {
+      final percent = item.bestPercent;
+      if (percent == null) return best;
+      if (best == null || percent > best) return percent;
+      return best;
+    });
+    if (best == null) return '已完成 $attempts 次';
+    return '最佳 $best% ・ $attempts 次';
+  }
+
+  String _scoreLabel(Iterable<ActivitySnapshot> items) {
+    final list = items.toList();
+    if (list.isEmpty) return '尚未挑戰';
+    final attempts = list.fold<int>(0, (sum, item) => sum + item.attempts);
+    final best = list.fold<int>(0, (best, item) {
+      return item.bestCorrect > best ? item.bestCorrect : best;
+    });
+    return '最佳 $best ・ $attempts 次';
+  }
+
+  String _memoryLabel(Iterable<ActivitySnapshot> items) {
+    final list = items.toList();
+    if (list.isEmpty) return '尚未挑戰';
+    final attempts = list.fold<int>(0, (sum, item) => sum + item.attempts);
+    final fastest = list.fold<int?>(null, (best, item) {
+      final seconds = item.bestDurationSeconds;
+      if (seconds == null || seconds <= 0) return best;
+      if (best == null || seconds < best) return seconds;
+      return best;
+    });
+    if (fastest == null) return '已完成 $attempts 次';
+    final minutes = fastest ~/ 60;
+    final seconds = fastest % 60;
+    final time = minutes == 0
+        ? '$seconds 秒'
+        : '$minutes 分 ${seconds.toString().padLeft(2, '0')} 秒';
+    return '最快 $time ・ $attempts 次';
   }
 }
 

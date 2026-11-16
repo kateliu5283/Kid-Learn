@@ -683,7 +683,7 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
               ],
               const SizedBox(height: 4),
               const Text(
-                '已驗證的帳號可在多台裝置同時登入。登入後會還原各課程的完成與星星；若手機遺失，請按「登出其他裝置」。',
+                '已驗證的帳號可在多台裝置同時登入。登入後會還原課程、每日複習、小遊戲與連續學習；若手機遺失，請按「登出其他裝置」。',
                 style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
               ),
               const SizedBox(height: 12),
@@ -707,6 +707,11 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
                     onPressed: _busy ? null : () => _logoutOtherDevices(context),
                     icon: const Icon(Icons.devices, size: 18),
                     label: const Text('登出其他裝置'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _busy ? null : () => _changePassword(context),
+                    icon: const Icon(Icons.key, size: 18),
+                    label: const Text('修改密碼'),
                   ),
                   OutlinedButton.icon(
                     onPressed: _busy
@@ -967,6 +972,25 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
     );
   }
 
+  Future<void> _changePassword(BuildContext context) async {
+    final result = await showDialog<({String current, String next})>(
+      context: context,
+      builder: (_) => const _ChangePasswordDialog(),
+    );
+    if (result == null || !context.mounted) return;
+    setState(() => _busy = true);
+    final ok = await context.read<ParentAuthProvider>().changePassword(
+          currentPassword: result.current,
+          newPassword: result.next,
+        );
+    if (!context.mounted) return;
+    setState(() => _busy = false);
+    final err = context.read<ParentAuthProvider>().lastError;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ok ? '密碼已更新' : (err ?? '無法更新密碼'))),
+    );
+  }
+
   Future<void> _restoreProgress(BuildContext context, {bool quiet = false}) async {
     if (!quiet) setState(() => _busy = true);
     final auth = context.read<ParentAuthProvider>();
@@ -974,6 +998,8 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
     final token = auth.token;
     var ok = false;
     if (auth.isEmailVerified && token != null) {
+      await auth.syncLocalStudents(progress.profilesForCloudSync());
+      if (!context.mounted) return;
       ok = await LearningProgressSync.pull(token: token, progress: progress);
     }
     if (!context.mounted) return;
@@ -1042,6 +1068,92 @@ class _ParentCloudAccountCardState extends State<_ParentCloudAccountCard> {
     setState(() => _busy = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('雲端帳號已刪除。這台裝置上的學習進度仍保留。')),
+    );
+  }
+}
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog();
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _current = TextEditingController();
+  final _next = TextEditingController();
+  final _confirm = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _current.dispose();
+    _next.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_next.text.length < 8) {
+      setState(() => _error = '新密碼至少 8 個字元');
+      return;
+    }
+    if (_next.text != _confirm.text) {
+      setState(() => _error = '兩次輸入的新密碼不一致');
+      return;
+    }
+    Navigator.pop(context, (current: _current.text, next: _next.text));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('修改密碼'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _current,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '目前密碼',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _next,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '新密碼',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _confirm,
+              obscureText: true,
+              onSubmitted: (_) => _submit(),
+              decoration: InputDecoration(
+                labelText: '再輸入一次新密碼',
+                border: const OutlineInputBorder(),
+                errorText: _error,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('更新'),
+        ),
+      ],
     );
   }
 }

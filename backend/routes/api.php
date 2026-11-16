@@ -47,6 +47,8 @@ Route::prefix('v1')->group(function () {
         Route::get('user/sessions', [AuthController::class, 'sessions']);
         Route::post('user/sessions/logout-others', [AuthController::class, 'logoutOtherDevices']);
         Route::get('user/me', [AuthController::class, 'me']);
+        Route::put('user/password', [AuthController::class, 'updatePassword'])
+            ->middleware('throttle:6,1');
         Route::post('user/email/resend', [AuthController::class, 'resendVerification'])
             ->middleware('throttle:6,1');
         Route::get('user/export', [AuthController::class, 'exportData']);

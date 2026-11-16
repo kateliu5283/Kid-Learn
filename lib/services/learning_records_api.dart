@@ -100,10 +100,13 @@ class LearningRecordsApi {
         .timeout(ApiConfig.timeout);
 
     if (res.statusCode == 401) {
-      throw LearningRecordApiException('登入已過期');
+      throw LearningRecordApiException('登入已過期', statusCode: 401);
     }
     if (res.statusCode == 404) {
-      throw LearningRecordApiException('找不到雲端學生，請確認已登入家長帳號並同步孩子。');
+      throw LearningRecordApiException(
+        '找不到雲端學生，請確認已登入家長帳號並同步孩子。',
+        statusCode: 404,
+      );
     }
     if (res.statusCode == 403) {
       String? code;
@@ -112,9 +115,9 @@ class LearningRecordsApi {
         if (m is Map && m['code'] is String) code = m['code'] as String;
       } catch (_) {}
       if (code == 'email_unverified') {
-        throw LearningRecordApiException('請先完成 Email 驗證');
+        throw LearningRecordApiException('請先完成 Email 驗證', statusCode: 403);
       }
-      throw LearningRecordApiException('無權限上傳');
+      throw LearningRecordApiException('無權限上傳', statusCode: 403);
     }
     if (res.statusCode < 200 || res.statusCode >= 300) {
       String? msg;
@@ -124,7 +127,10 @@ class LearningRecordsApi {
           msg = m['message'] as String;
         }
       } catch (_) {}
-      throw LearningRecordApiException(msg ?? '上傳失敗（${res.statusCode}）');
+      throw LearningRecordApiException(
+        msg ?? '上傳失敗（${res.statusCode}）',
+        statusCode: res.statusCode,
+      );
     }
   }
 
@@ -188,6 +194,43 @@ class CloudLessonProgress {
   }
 }
 
+class CloudActivitySummary {
+  const CloudActivitySummary({
+    required this.activityType,
+    required this.bestCorrect,
+    required this.bestQuestionCount,
+    required this.attempts,
+    this.contextKey,
+    this.bestPercent,
+    this.bestDurationSeconds,
+    this.lastRecordedAt,
+  });
+
+  final String activityType;
+  final String? contextKey;
+  final int bestCorrect;
+  final int bestQuestionCount;
+  final int? bestPercent;
+  final int? bestDurationSeconds;
+  final int attempts;
+  final DateTime? lastRecordedAt;
+
+  factory CloudActivitySummary.fromJson(Map<String, dynamic> json) {
+    return CloudActivitySummary(
+      activityType: json['activity_type'] as String? ?? '',
+      contextKey: json['context_key'] as String?,
+      bestCorrect: (json['best_correct'] as num?)?.toInt() ?? 0,
+      bestQuestionCount: (json['best_question_count'] as num?)?.toInt() ?? 0,
+      bestPercent: (json['best_percent'] as num?)?.toInt(),
+      bestDurationSeconds: (json['best_duration_seconds'] as num?)?.toInt(),
+      attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+      lastRecordedAt: json['last_recorded_at'] == null
+          ? null
+          : DateTime.tryParse(json['last_recorded_at'] as String),
+    );
+  }
+}
+
 class CloudChildProgress {
   const CloudChildProgress({
     required this.studentId,
@@ -196,6 +239,8 @@ class CloudChildProgress {
     required this.lessons,
     this.deviceLocalId,
     this.avatar,
+    this.activities = const [],
+    this.studyDates = const [],
   });
 
   final int studentId;
@@ -204,6 +249,8 @@ class CloudChildProgress {
   final int grade;
   final String? avatar;
   final List<CloudLessonProgress> lessons;
+  final List<CloudActivitySummary> activities;
+  final List<String> studyDates;
 
   factory CloudChildProgress.fromJson(Map<String, dynamic> json) {
     final rawLessons = json['lessons'];
@@ -215,6 +262,16 @@ class CloudChildProgress {
                 ))
             .toList()
         : <CloudLessonProgress>[];
+    final rawActivities = json['activities'];
+    final activities = rawActivities is List
+        ? rawActivities
+            .whereType<Map>()
+            .map((e) => CloudActivitySummary.fromJson(
+                  Map<String, dynamic>.from(e),
+                ))
+            .toList()
+        : <CloudActivitySummary>[];
+    final rawDates = json['study_dates'];
     return CloudChildProgress(
       studentId: (json['student_id'] as num).toInt(),
       deviceLocalId: json['device_local_id'] as String?,
@@ -222,13 +279,18 @@ class CloudChildProgress {
       grade: (json['grade'] as num?)?.toInt() ?? 1,
       avatar: json['avatar'] as String?,
       lessons: lessons,
+      activities: activities,
+      studyDates: rawDates is List
+          ? rawDates.map((e) => e.toString()).toList()
+          : const [],
     );
   }
 }
 
 class LearningRecordApiException implements Exception {
-  LearningRecordApiException(this.message);
+  LearningRecordApiException(this.message, {this.statusCode});
   final String message;
+  final int? statusCode;
 
   @override
   String toString() => message;

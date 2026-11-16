@@ -374,6 +374,47 @@ class ParentAuthApi {
     return res.body;
   }
 
+  /// 已登入時更換密碼。這台裝置保持登入。
+  Future<void> changePassword(
+    String token, {
+    required String currentPassword,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final res = await _client
+        .put(
+          _u('/user/password'),
+          headers: _headers(token),
+          body: jsonEncode({
+            'current_password': currentPassword,
+            'password': password,
+            'password_confirmation': passwordConfirmation,
+          }),
+        )
+        .timeout(ApiConfig.timeout);
+    if (res.statusCode == 401) {
+      throw ParentAuthException('登入已過期，請重新登入。');
+    }
+    if (res.statusCode == 429) {
+      throw ParentAuthException(_messageFromBody(res.body) ?? '嘗試次數過多，請稍後再試。');
+    }
+    if (res.statusCode == 422) {
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(res.body);
+      } catch (_) {
+        throw ParentAuthException('無法更新密碼。');
+      }
+      if (decoded is Map<String, dynamic>) {
+        throw ParentAuthException(_firstValidationMessage(decoded) ?? '無法更新密碼。');
+      }
+      throw ParentAuthException('無法更新密碼。');
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ParentAuthException('無法更新密碼（${res.statusCode}）');
+    }
+  }
+
   /// 以目前密碼刪除雲端家長帳號。
   Future<void> deleteAccount(String token, {required String password}) async {
     final res = await _client

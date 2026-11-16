@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/activity_stats.dart';
 import '../models/user_progress.dart';
 import '../services/learning_records_api.dart';
+import '../services/learning_upload_queue.dart';
 
 /// 管理多帳號 + 各帳號的學習進度
 class ProgressProvider extends ChangeNotifier {
@@ -10,6 +12,7 @@ class ProgressProvider extends ChangeNotifier {
   static const _kCurrentIdKey = 'current_profile_id';
   static const _kProgressPrefix = 'progress_';
   static const _kTutorialPrefix = 'tutorials_';
+  static const _kActivityPrefix = 'activity_server_v1_';
 
   // 舊版單帳號的 keys（用於遷移）
   static const _kLegacyProfileKey = 'user_profile';
@@ -23,6 +26,11 @@ class ProgressProvider extends ChangeNotifier {
 
   /// profileId -> 已看過的教學 guideId 集合
   final Map<String, Set<String>> _seenTutorialsByProfile = {};
+
+  /// 上次成功從雲端拉下的每日複習／遊戲彙總。尚未補傳的成績另外疊加。
+  final Map<String, ChildActivityStats> _serverActivity = {};
+  final Map<String, String> _activityEncoded = {};
+  List<PendingLearningRecord> _pending = [];
 
   bool _loaded = false;
 
@@ -70,6 +78,44 @@ class ProgressProvider extends ChangeNotifier {
 
   LessonProgress progressOf(String lessonId) =>
       _currentProgress[lessonId] ?? LessonProgress(lessonId: lessonId);
+
+  /// 雲端彙總加上尚未上傳成功的紀錄。
+  ChildActivityStats activityOf(String profileId) {
+    return foldActivities(
+      _serverActivity[profileId] ?? ChildActivityStats.empty,
+      _pending.where((item) => item.deviceLocalId == profileId),
+    );
+  }
+
+  /// 連續學習天數。今天還沒學習時，從昨天往回算。
+  int studyStreakOf(String profileId) {
+    final dates = <String>{...activityOf(profileId).studyDates};
+    final lessons = _progressByProfile[profileId];
+    if (lessons != null) {
+      for (final lesson in lessons.values) {
+        final at = lesson.lastStudiedAt;
+        if (at != null) dates.add(studyDayKey(at.toLocal()));
+      }
+    }
+    return studyStreak(dates, DateTime.now());
+  }
+
+  Future<void> setPendingActivities(List<PendingLearningRecord> items) async {
+    _pending = List<PendingLearningRecord>.of(items);
+    notifyListeners();
+  }
+
+  /// 單筆上傳成功後先併進雲端彙總，避免下次拉取前成績短暫消失。
+  Future<void> absorbUploaded(PendingLearningRecord item) async {
+    final id = item.deviceLocalId;
+    if (id.isEmpty || id == 'guest') return;
+    final current = _serverActivity[id] ?? ChildActivityStats.empty;
+    final next = foldActivities(current, [item]);
+    _serverActivity[id] = next;
+    _activityEncoded[id] = jsonEncode(next.toJson());
+    final sp = await SharedPreferences.getInstance();
+    await _writeActivity(sp, id);
+  }
 
   double subjectProgress(Iterable<String> lessonIds) {
     if (lessonIds.isEmpty) return 0;
@@ -146,12 +192,27 @@ class ProgressProvider extends ChangeNotifier {
       final seenList = sp.getStringList(tutorialKey);
       _seenTutorialsByProfile[p.id] =
           seenList != null ? seenList.toSet() : <String>{};
+
+      final activityRaw = sp.getString('$_kActivityPrefix${p.id}');
+      if (activityRaw != null && activityRaw.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(activityRaw);
+          if (decoded is Map) {
+            final stats = ChildActivityStats.fromJson(
+              Map<String, dynamic>.from(decoded),
+            );
+            _serverActivity[p.id] = stats;
+            _activityEncoded[p.id] = jsonEncode(stats.toJson());
+          }
+        } catch (_) {}
+      }
     }
 
     if (_currentId == null && _profiles.isNotEmpty) {
       _currentId = _profiles.first.id;
     }
 
+    _pending = await LearningUploadQueue().load();
     _loaded = true;
     notifyListeners();
   }
@@ -224,6 +285,9 @@ class ProgressProvider extends ChangeNotifier {
     _profiles.removeWhere((p) => p.id == id);
     _progressByProfile.remove(id);
     _seenTutorialsByProfile.remove(id);
+    _serverActivity.remove(id);
+    _activityEncoded.remove(id);
+    _pending = _pending.where((item) => item.deviceLocalId != id).toList();
     if (_currentId == id) {
       _currentId = _profiles.first.id;
     }
@@ -231,6 +295,8 @@ class ProgressProvider extends ChangeNotifier {
     await _save(sp);
     await sp.remove('$_kProgressPrefix$id');
     await sp.remove('$_kTutorialPrefix$id');
+    await sp.remove('$_kActivityPrefix$id');
+    await LearningUploadQueue().save(_pending);
     notifyListeners();
   }
 
@@ -273,6 +339,7 @@ class ProgressProvider extends ChangeNotifier {
 
     final hadNone = _profiles.isEmpty;
     final touched = <String>{};
+    final activityTouched = <String>{};
     var changed = false;
 
     for (final child in children) {
@@ -321,6 +388,21 @@ class ProgressProvider extends ChangeNotifier {
           changed = true;
         }
       }
+
+      final stats = ChildActivityStats(
+        studyDates: child.studyDates,
+        activities: [
+          for (final activity in child.activities)
+            ActivitySnapshot.fromCloud(activity),
+        ],
+      );
+      final encoded = jsonEncode(stats.toJson());
+      if (_activityEncoded[id] != encoded) {
+        _serverActivity[id] = stats;
+        _activityEncoded[id] = encoded;
+        activityTouched.add(id);
+        changed = true;
+      }
     }
 
     if (hadNone && _profiles.isNotEmpty) {
@@ -341,6 +423,9 @@ class ProgressProvider extends ChangeNotifier {
     for (final id in touched) {
       await _writeProgress(sp, id);
     }
+    for (final id in activityTouched) {
+      await _writeActivity(sp, id);
+    }
     notifyListeners();
   }
 
@@ -349,14 +434,24 @@ class ProgressProvider extends ChangeNotifier {
     for (final p in _profiles) {
       await sp.remove('$_kProgressPrefix${p.id}');
       await sp.remove('$_kTutorialPrefix${p.id}');
+      await sp.remove('$_kActivityPrefix${p.id}');
     }
     _profiles = [];
     _progressByProfile.clear();
     _seenTutorialsByProfile.clear();
+    _serverActivity.clear();
+    _activityEncoded.clear();
+    _pending = [];
     _currentId = null;
     await sp.remove(_kProfilesKey);
     await sp.remove(_kCurrentIdKey);
+    await LearningUploadQueue().clear();
     notifyListeners();
+  }
+
+  Future<void> _writeActivity(SharedPreferences sp, String id) async {
+    final stats = _serverActivity[id] ?? ChildActivityStats.empty;
+    await sp.setString('$_kActivityPrefix$id', jsonEncode(stats.toJson()));
   }
 
   Future<void> _writeProgress(SharedPreferences sp, String id) async {

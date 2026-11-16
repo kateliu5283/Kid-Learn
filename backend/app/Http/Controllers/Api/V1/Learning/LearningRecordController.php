@@ -120,6 +120,7 @@ class LearningRecordController extends Controller
 
     /**
      * 各孩子的課程完成狀態（測驗／單課複習）。星星取較高的一次，分數取最新一次。
+     * 每日複習與三個小遊戲另外彙總最佳成績；study_dates 為台北時區有學習紀錄的日期。
      * 沒有 device_local_id 的孩子會寫入穩定的 c_{id}，讓新裝置能對回同一個學生。
      */
     public function progress(Request $request): JsonResponse
@@ -136,9 +137,12 @@ class LearningRecordController extends Controller
         }
 
         $byStudent = [];
+        $activitiesByStudent = [];
+        $studyDatesByStudent = [];
         if ($students->isNotEmpty()) {
+            $studentIds = $students->pluck('id');
             $records = StudentLearningRecord::query()
-                ->whereIn('student_id', $students->pluck('id'))
+                ->whereIn('student_id', $studentIds)
                 ->whereIn('activity_type', [
                     StudentLearningRecord::TYPE_LESSON_QUIZ,
                     StudentLearningRecord::TYPE_LESSON_REVIEW,
@@ -162,11 +166,83 @@ class LearningRecordController extends Controller
                     'last_studied_at' => $record->recorded_at?->toIso8601String(),
                 ];
             }
+
+            $activityRecords = StudentLearningRecord::query()
+                ->whereIn('student_id', $studentIds)
+                ->whereIn('activity_type', [
+                    StudentLearningRecord::TYPE_DAILY_REVIEW,
+                    StudentLearningRecord::TYPE_GAME_MATH_BLITZ,
+                    StudentLearningRecord::TYPE_GAME_MEMORY_MATCH,
+                    StudentLearningRecord::TYPE_GAME_WORD_RAIN,
+                ])
+                ->orderBy('recorded_at')
+                ->orderBy('id')
+                ->get([
+                    'student_id',
+                    'activity_type',
+                    'context_key',
+                    'correct_count',
+                    'question_count',
+                    'score_percent',
+                    'duration_seconds',
+                    'recorded_at',
+                ]);
+
+            foreach ($activityRecords as $record) {
+                $sid = (int) $record->student_id;
+                $type = (string) $record->activity_type;
+                $context = (string) ($record->context_key ?? '');
+                $key = $type.'|'.$context;
+                $current = $activitiesByStudent[$sid][$key] ?? null;
+                $correct = (int) $record->correct_count;
+                $total = (int) $record->question_count;
+                $percent = $record->score_percent;
+                if ($percent === null && $total > 0) {
+                    $percent = (int) round(($correct / $total) * 100);
+                }
+                $bestDuration = $current['best_duration_seconds'] ?? null;
+                $duration = $record->duration_seconds;
+                if ($type === StudentLearningRecord::TYPE_GAME_MEMORY_MATCH && is_int($duration) && $duration > 0) {
+                    $bestDuration = $bestDuration === null ? $duration : min($bestDuration, $duration);
+                }
+                $isBetter = $current === null || $correct > (int) $current['best_correct'];
+                $bestPercent = $current['best_percent'] ?? null;
+                if ($percent !== null) {
+                    $bestPercent = $bestPercent === null ? (int) $percent : max($bestPercent, (int) $percent);
+                }
+                $activitiesByStudent[$sid][$key] = [
+                    'activity_type' => $type,
+                    'context_key' => $context === '' ? null : $context,
+                    'best_correct' => $isBetter ? $correct : (int) $current['best_correct'],
+                    'best_question_count' => $isBetter ? $total : (int) $current['best_question_count'],
+                    'best_percent' => $bestPercent,
+                    'best_duration_seconds' => $bestDuration,
+                    'attempts' => (int) ($current['attempts'] ?? 0) + 1,
+                    'last_recorded_at' => $record->recorded_at?->toIso8601String(),
+                ];
+            }
+
+            $timestamps = StudentLearningRecord::query()
+                ->whereIn('student_id', $studentIds)
+                ->get(['student_id', 'recorded_at']);
+            foreach ($timestamps as $record) {
+                $day = $record->recorded_at?->timezone('Asia/Taipei')->toDateString();
+                if ($day === null) {
+                    continue;
+                }
+                $studyDatesByStudent[(int) $record->student_id][$day] = true;
+            }
         }
 
-        $data = $students->map(function (Student $student) use ($byStudent) {
+        $data = $students->map(function (Student $student) use ($byStudent, $activitiesByStudent, $studyDatesByStudent) {
             $lessons = array_values($byStudent[(int) $student->id] ?? []);
             usort($lessons, fn (array $a, array $b) => strcmp($a['lesson_id'], $b['lesson_id']));
+            $activities = array_values($activitiesByStudent[(int) $student->id] ?? []);
+            usort($activities, function (array $a, array $b): int {
+                return strcmp($a['activity_type'].($a['context_key'] ?? ''), $b['activity_type'].($b['context_key'] ?? ''));
+            });
+            $dates = array_keys($studyDatesByStudent[(int) $student->id] ?? []);
+            sort($dates);
 
             return [
                 'student_id' => $student->id,
@@ -175,6 +251,8 @@ class LearningRecordController extends Controller
                 'grade' => $student->grade,
                 'avatar' => $student->avatar,
                 'lessons' => $lessons,
+                'activities' => $activities,
+                'study_dates' => $dates,
             ];
         })->values();
 
