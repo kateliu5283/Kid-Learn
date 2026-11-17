@@ -87,6 +87,7 @@ $tip
     semester: Semester.first,
     unit: unit,
     publisher: publisher,
+    part: TextbookPart.primer,
     title: title,
     summary: summary,
     estimatedMinutes: estimatedMinutes,

@@ -151,7 +151,10 @@ void main() {
     }
 
     final grade1 = writingSetsFor(kLessons.where((l) => l.grade == 1));
-    expect(grade1.length, primer.length);
+    final withWriting = kLessons.where(
+      (l) => l.grade == 1 && l.writingPractice.isNotEmpty,
+    );
+    expect(grade1.length, withWriting.length);
     expect(grade1.first.name, '康軒・貓咪');
     expect(
       writingSetsFor(kLessons.where((l) => l.grade == 2)),

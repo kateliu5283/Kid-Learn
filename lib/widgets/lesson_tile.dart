@@ -100,16 +100,19 @@ class LessonTile extends StatelessWidget {
 
   Widget _buildTrackBadge(Lesson lesson) {
     final sem = lesson.semester?.label ?? '';
-    final unit = lesson.unit == null
-        ? ''
-        : lesson.publisher != null
-            ? ' 第 ${lesson.unit} 課'
-            : ' 第 ${lesson.unit} 單元';
+    final part = lesson.part == null ? '' : ' ${lesson.part!.label}';
+    final unit = lesson.unitLabel != null
+        ? ' ${lesson.unitLabel}'
+        : lesson.unit == null
+            ? ''
+            : lesson.publisher != null
+                ? ' 第 ${lesson.unit} 課'
+                : ' 第 ${lesson.unit} 單元';
     final pub = lesson.publisher?.label ?? '';
     final label = sem.isEmpty
         ? (pub.isEmpty ? lesson.track.label : pub)
         : '${pub.isEmpty ? '' : '$pub '}'
-            '${lesson.grade}$sem$unit';
+            '${lesson.grade}$sem$part$unit';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(

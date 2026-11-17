@@ -28,7 +28,7 @@ enum Semester {
   const Semester(this.label);
 }
 
-/// 國小教科書版本。目前用於一年級上學期國語首冊。
+/// 國小教科書版本。目前用於一年級上學期國語。
 enum TextbookPublisher {
   kangxuan('康軒', 'kx'),
   hanlin('翰林', 'hl'),
@@ -37,6 +37,16 @@ enum TextbookPublisher {
   final String label;
   final String code;
   const TextbookPublisher(this.label, this.code);
+}
+
+/// 一年級上學期國語的冊別。首冊是注音，第一冊是正式課文。
+enum TextbookPart {
+  primer('首冊', 0),
+  volumeOne('第一冊', 1);
+
+  final String label;
+  final int order;
+  const TextbookPart(this.label, this.order);
 }
 
 /// 關鍵字詞/生字：預習和複習時顯示
@@ -95,6 +105,12 @@ class Lesson {
   /// 教科書版本；未分版本的課綱單元為 null。
   final TextbookPublisher? publisher;
 
+  /// 首冊或第一冊；未分冊的課綱單元為 null。
+  final TextbookPart? part;
+
+  /// 課次的顯示文字。有設值時取代「第 n 課」，例如入門課。
+  final String? unitLabel;
+
   /// 本課生字，供手寫練習。
   final List<WritingGlyph> writingPractice;
 
@@ -115,10 +131,12 @@ class Lesson {
     this.vocabulary = const [],
     this.teachingBlocks = const [],
     this.publisher,
+    this.part,
+    this.unitLabel,
     this.writingPractice = const [],
   });
 
-  /// 顯示用標籤：例如「康軒 · 1上 第 3 課」或「108 課綱 · 1下 第 2 單元」
+  /// 顯示用標籤：例如「康軒 · 1上 首冊 第 3 課」或「108 課綱 · 1下 第 2 單元」
   String get editionLabel {
     final sb = StringBuffer();
     if (publisher != null) {
@@ -131,7 +149,12 @@ class Lesson {
     if (semester != null) {
       sb.write(' · $grade${semester!.label}');
     }
-    if (unit != null) {
+    if (part != null) {
+      sb.write(' ${part!.label}');
+    }
+    if (unitLabel != null) {
+      sb.write(' $unitLabel');
+    } else if (unit != null) {
       sb.write(publisher != null ? ' 第 $unit 課' : ' 第 $unit 單元');
     }
     return sb.toString();

@@ -58,6 +58,8 @@ class _LessonListScreenState extends State<LessonListScreen> {
         final pubCmp =
             (a.publisher?.index ?? 99).compareTo(b.publisher?.index ?? 99);
         if (pubCmp != 0) return pubCmp;
+        final partCmp = (a.part?.order ?? 99).compareTo(b.part?.order ?? 99);
+        if (partCmp != 0) return partCmp;
         return (a.unit ?? 99).compareTo(b.unit ?? 99);
       });
 

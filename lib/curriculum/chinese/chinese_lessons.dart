@@ -1,18 +1,24 @@
 import '../../models/lesson.dart';
 import '../../models/question.dart';
+import 'book1/hanlin_book.dart';
+import 'book1/kangxuan_book.dart';
+import 'book1/nani_book.dart';
 import 'primer/hanlin_primer.dart';
 import 'primer/kangxuan_primer.dart';
 import 'primer/nani_primer.dart';
 
 /// 國語課程（國小 1–4 年級，上下學期）
 ///
-/// 一年級上學期國語首冊依康軒、翰林、南一的課次與注音範圍編寫。
-/// 練習短文為自編，對齊各版本單元主題，不摘錄出版社原文。
+/// 一年級上學期依康軒、翰林、南一 115 學年度的首冊與第一冊編寫。
+/// 練習短文為自編，對齊各版本課次與生字，不摘錄出版社原文。
 /// 一年級下學期起仍依 108 課綱學習內容編寫。
 final List<Lesson> kChineseLessons = [
   ...kKangxuanPrimerLessons,
+  ...kKangxuanBookLessons,
   ...kHanlinPrimerLessons,
+  ...kHanlinBookLessons,
   ...kNaniPrimerLessons,
+  ...kNaniBookLessons,
   ...kChineseCoreLessons,
 ];
 
