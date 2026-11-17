@@ -14,11 +14,16 @@ class LearningProgressSync {
     required ProgressProvider progress,
     LearningRecordsApi? api,
   }) async {
+    final client = api ?? _api;
     try {
-      await LearningRecordSync.flush(token: token, progress: progress);
+      await LearningRecordSync.flush(
+        token: token,
+        progress: progress,
+        api: client,
+      );
     } catch (_) {}
     try {
-      final remote = await (api ?? _api).fetchProgress(token);
+      final remote = await client.fetchProgress(token);
       await progress.applyCloudProgress(remote);
       return true;
     } catch (_) {

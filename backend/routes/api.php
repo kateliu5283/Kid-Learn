@@ -48,12 +48,12 @@ Route::prefix('v1')->group(function () {
         Route::post('user/sessions/logout-others', [AuthController::class, 'logoutOtherDevices']);
         Route::get('user/me', [AuthController::class, 'me']);
         Route::put('user/password', [AuthController::class, 'updatePassword'])
-            ->middleware('throttle:6,1');
+            ->middleware('throttle:6,1,password');
         Route::post('user/email/resend', [AuthController::class, 'resendVerification'])
-            ->middleware('throttle:6,1');
+            ->middleware('throttle:6,1,resend');
         Route::get('user/export', [AuthController::class, 'exportData']);
         Route::delete('user/account', [AuthController::class, 'destroyAccount'])
-            ->middleware('throttle:6,1');
+            ->middleware('throttle:6,1,delete-account');
         Route::get('user/students', [StudentController::class, 'index']);
         Route::post('user/students', [StudentController::class, 'store'])
             ->middleware('parent.verified');
