@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../curriculum/catalog.dart';
 import '../../curriculum/handwriting/character_sets.dart';
+import '../../curriculum/handwriting/lesson_writing.dart';
 import '../../curriculum/handwriting/stroke_templates.dart';
 import '../../providers/progress_provider.dart';
 import 'handwriting_practice_screen.dart';
@@ -14,6 +16,9 @@ class HandwritingHubScreen extends StatelessWidget {
     final grade = context.watch<ProgressProvider>().profile.grade;
 
     // 依年級排序（和目前年級相近的排前面）
+    final lessonSets = writingSetsFor(
+      kLessons.where((lesson) => lesson.grade == grade),
+    );
     final sorted = [...kCharacterSets]
       ..sort((a, b) =>
           (a.grade - grade).abs().compareTo((b.grade - grade).abs()));
@@ -50,6 +55,15 @@ class HandwritingHubScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
+          if (lessonSets.isNotEmpty) ...[
+            const Text(
+              '課本生字',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            ...lessonSets.map((s) => _buildSetCard(context, s)),
+            const SizedBox(height: 8),
+          ],
           const Text(
             '選擇字庫',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
@@ -119,11 +133,15 @@ class HandwritingHubScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Text(
-                                set.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
+                              Flexible(
+                                child: Text(
+                                  set.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 6),

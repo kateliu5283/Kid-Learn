@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../curriculum/curriculum.dart';
+import '../curriculum/handwriting/lesson_writing.dart';
 import '../models/lesson.dart';
 import '../providers/progress_provider.dart';
 import '../services/lesson_teaching.dart';
 import '../widgets/lesson_teaching_view.dart';
+import 'handwriting/handwriting_practice_screen.dart';
 import 'lesson/preview_screen.dart';
 import 'lesson/lesson_study_screen.dart';
 import 'lesson/review_screen.dart';
@@ -90,8 +92,26 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               );
             },
           ),
+          if (lesson.writingPractice.isNotEmpty)
+            _StepCard(
+              step: 3,
+              title: '生字手寫',
+              subtitle: '一筆一畫寫本課例字',
+              icon: Icons.brush_rounded,
+              color: const Color(0xFFEF5350),
+              badge: '${lesson.writingPractice.length} 個字',
+              onTap: () {
+                final set = writingSetFor(lesson);
+                if (set == null) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => HandwritingPracticeScreen(set: set),
+                  ),
+                );
+              },
+            ),
           _StepCard(
-            step: 3,
+            step: lesson.writingPractice.isEmpty ? 3 : 4,
             title: '測驗',
             subtitle: '檢驗學習成果',
             icon: Icons.quiz_rounded,
@@ -109,7 +129,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   },
           ),
           _StepCard(
-            step: 4,
+            step: lesson.writingPractice.isEmpty ? 4 : 5,
             title: '複習',
             subtitle: '重點回顧 + 混合題挑戰',
             icon: Icons.replay_rounded,

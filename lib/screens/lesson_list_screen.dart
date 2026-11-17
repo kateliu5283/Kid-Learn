@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../curriculum/curriculum.dart';
-import '../models/lesson.dart' show Semester;
+import '../models/lesson.dart' show Semester, TextbookPublisher;
 import '../models/subject.dart';
 import '../providers/progress_provider.dart';
 import '../widgets/lesson_tile.dart';
@@ -23,22 +23,41 @@ class LessonListScreen extends StatefulWidget {
 
 class _LessonListScreenState extends State<LessonListScreen> {
   Semester? _semesterFilter;
+  TextbookPublisher? _publisherFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    final hasPublisher = lessonsFor(widget.subject.id, widget.grade)
+        .any((l) => l.publisher != null);
+    if (hasPublisher) {
+      _publisherFilter = TextbookPublisher.kangxuan;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressProvider>();
     final allLessons = lessonsFor(widget.subject.id, widget.grade);
-
-    final filtered = allLessons.where((l) {
+    final inSemester = allLessons.where((l) {
       if (_semesterFilter != null && l.semester != _semesterFilter) {
         return false;
       }
       return true;
+    }).toList();
+    final showPublisher = inSemester.any((l) => l.publisher != null);
+
+    final filtered = inSemester.where((l) {
+      if (!showPublisher || _publisherFilter == null) return true;
+      return l.publisher == null || l.publisher == _publisherFilter;
     }).toList()
       ..sort((a, b) {
         final semCmp =
             (a.semester?.index ?? 99).compareTo(b.semester?.index ?? 99);
         if (semCmp != 0) return semCmp;
+        final pubCmp =
+            (a.publisher?.index ?? 99).compareTo(b.publisher?.index ?? 99);
+        if (pubCmp != 0) return pubCmp;
         return (a.unit ?? 99).compareTo(b.unit ?? 99);
       });
 
@@ -57,6 +76,15 @@ class _LessonListScreenState extends State<LessonListScreen> {
             colorBuilder: (_) => widget.subject.color,
             onChanged: (s) => setState(() => _semesterFilter = s),
           ),
+          if (showPublisher)
+            _buildFilterRow<TextbookPublisher>(
+              label: '版本',
+              options: TextbookPublisher.values,
+              current: _publisherFilter,
+              labelBuilder: (p) => p.label,
+              colorBuilder: (_) => widget.subject.color,
+              onChanged: (p) => setState(() => _publisherFilter = p),
+            ),
           const Divider(height: 1),
           Expanded(
             child: filtered.isEmpty
