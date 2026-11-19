@@ -28,7 +28,7 @@ Question readerQ({
   );
 }
 
-/// 國語第一冊、第二冊一課：自編短文、生字、語詞與測驗。
+/// 國語各冊一課：自編短文、生字、語詞與測驗。
 ///
 /// 課名與生字對齊 115 學年度公開字表；句子為小學堂自編，不摘錄課本原文。
 /// 同一課若有同音字（例如「遊」和「游」），仍各自保留，題庫不再問「哪一個字念這個音」。
@@ -47,6 +47,7 @@ Lesson readerLesson({
   required String tip,
   required List<Question> questions,
   int estimatedMinutes = 12,
+  int grade = 1,
   Semester semester = Semester.first,
   TextbookPart part = TextbookPart.volumeOne,
 }) {
@@ -77,8 +78,10 @@ Lesson readerLesson({
     TextbookPart.primer => 'p',
     TextbookPart.volumeOne => 'v1',
     TextbookPart.volumeTwo => 'v2',
+    TextbookPart.volumeThree => 'v3',
+    TextbookPart.volumeFour => 'v4',
   };
-  final id = 'cl-c-1-$term-$code-$vol-${unit.toString().padLeft(2, '0')}';
+  final id = 'cl-c-$grade-$term-$code-$vol-${unit.toString().padLeft(2, '0')}';
   final writing = [
     for (final c in chars)
       WritingGlyph(
@@ -137,7 +140,7 @@ $tip
   return Lesson(
     id: id,
     subjectId: 'chinese',
-    grade: 1,
+    grade: grade,
     track: CurriculumTrack.core,
     semester: semester,
     unit: unit,

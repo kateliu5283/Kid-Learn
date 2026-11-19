@@ -6,19 +6,31 @@ import 'book1/nani_book.dart';
 import 'book2/hanlin_book.dart';
 import 'book2/kangxuan_book.dart';
 import 'book2/nani_book.dart';
+import 'book3/hanlin_book.dart';
+import 'book3/kangxuan_book.dart';
+import 'book3/nani_book.dart';
+import 'book4/hanlin_book.dart';
+import 'book4/kangxuan_book.dart';
+import 'book4/nani_book.dart';
 
 /// 數學課程（國小 1–2 年級，上下學期）
 ///
-/// 一年級上下學期依康軒、翰林、南一的單元順序編寫。
+/// 一、二年級上下學期依康軒、翰林、南一的單元順序編寫。
 /// 例子與練習為自編，對齊各版本單元，不摘錄出版社原文。
-/// 108 課綱的核心單元仍保留，和下學期版本單元一起列出。
+/// 108 課綱的核心單元仍保留，和版本單元一起列出。
 final List<Lesson> kMathLessons = [
   ...kKangxuanMathBookLessons,
   ...kKangxuanMathBook2Lessons,
+  ...kKangxuanMathBook3Lessons,
+  ...kKangxuanMathBook4Lessons,
   ...kHanlinMathBookLessons,
   ...kHanlinMathBook2Lessons,
+  ...kHanlinMathBook3Lessons,
+  ...kHanlinMathBook4Lessons,
   ...kNaniMathBookLessons,
   ...kNaniMathBook2Lessons,
+  ...kNaniMathBook3Lessons,
+  ...kNaniMathBook4Lessons,
   ...kMathCoreLessons,
 ];
 

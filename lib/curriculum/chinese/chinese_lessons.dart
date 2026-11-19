@@ -6,26 +6,37 @@ import 'book1/nani_book.dart';
 import 'book2/hanlin_book.dart';
 import 'book2/kangxuan_book.dart';
 import 'book2/nani_book.dart';
+import 'book3/hanlin_book.dart';
+import 'book3/kangxuan_book.dart';
+import 'book3/nani_book.dart';
+import 'book4/hanlin_book.dart';
+import 'book4/kangxuan_book.dart';
+import 'book4/nani_book.dart';
 import 'primer/hanlin_primer.dart';
 import 'primer/kangxuan_primer.dart';
 import 'primer/nani_primer.dart';
 
 /// 國語課程（國小 1–4 年級，上下學期）
 ///
-/// 一年級上學期依康軒、翰林、南一 115 學年度的首冊與第一冊編寫。
-/// 一年級下學期另有三版本第二冊：課名與生字對齊公開字表。
-/// 練習短文為自編，不摘錄出版社原文。
-/// 一年級下學期起的課綱單元仍保留。
+/// 一、二年級依康軒、翰林、南一的冊次編寫。
+/// 課名與生字對齊公開字表，練習短文為自編，不摘錄出版社原文。
+/// 108 課綱的核心單元仍保留，和版本課文一起列出。
 final List<Lesson> kChineseLessons = [
   ...kKangxuanPrimerLessons,
   ...kKangxuanBookLessons,
   ...kKangxuanBook2Lessons,
+  ...kKangxuanBook3Lessons,
+  ...kKangxuanBook4Lessons,
   ...kHanlinPrimerLessons,
   ...kHanlinBookLessons,
   ...kHanlinBook2Lessons,
+  ...kHanlinBook3Lessons,
+  ...kHanlinBook4Lessons,
   ...kNaniPrimerLessons,
   ...kNaniBookLessons,
   ...kNaniBook2Lessons,
+  ...kNaniBook3Lessons,
+  ...kNaniBook4Lessons,
   ...kChineseCoreLessons,
 ];
 
