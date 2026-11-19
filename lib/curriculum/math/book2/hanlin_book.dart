@@ -1,0 +1,718 @@
+import '../../../models/lesson.dart';
+import '../book1/unit_builder.dart';
+
+/// 翰林數學一下（單元順序對齊 115 學年度目錄）。
+/// 例子與練習為自編，不摘錄課本原文。
+final List<Lesson> kHanlinMathBook2Lessons = [
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 1,
+    title: '20 以內的加法',
+    summary: '和在 20 以內，包含湊十和加數對調',
+    opening: '小華有 9 張貼紙，同學又給她 8 張。她先把 9 補成 10，再算剩下的 7 張。',
+    method: '和超過 10 時先湊十。9 + 8 = 17，10 + 10 = 20。兩個加數交換位置，和不會改變。這一單元的結果最大到 20。',
+    examples: const [
+      MathExample('9 + 8', '先湊 10，剩下 7，和是 17'),
+      MathExample('10 + 10', '和是 20'),
+      MathExample('6 + 7 和 7 + 6', '兩題都是 13'),
+    ],
+    points: const [
+      MathPoint('🔟', '先湊十', '靠近 10 的數先補滿，再加剩下的。'),
+      MathPoint('🔁', '對調不變', '加數交換，和還是同一個數。'),
+      MathPoint('➕', '最大到二十', '10 + 10 是這一單元最大的和。'),
+    ],
+    steps: const [
+      '用貼紙做 9 + 8，說出怎麼湊十',
+      '再做 10 + 10 和 12 + 8',
+      '把一題的兩個加數對調，檢查和是否相同',
+    ],
+    tip: '湊十時，拿去補 10 的部分不能再加第二次。',
+    objectives: const [
+      '能計算和在 20 以內的加法',
+      '能用湊十算出超過 10 的和',
+      '能說明加數對調後和不變',
+    ],
+    keyPoints: const [
+      '先湊 10，再加剩餘',
+      '10 + 10 = 20',
+      '加數對調，和不變',
+    ],
+    vocabulary: const [
+      VocabItem(term: '加數', meaning: '加法裡相加的數', example: '9 + 8 的加數是 9 和 8'),
+      VocabItem(term: '和', meaning: '加完得到的數', example: '9 + 8 的和是 17'),
+      VocabItem(term: '湊十', meaning: '先補成 10 再加', example: '算 9 + 8 可以先湊十'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '9 + 8 = ?',
+        options: ['15', '16', '17', '18'],
+        correctIndex: 2,
+        explanation: '9 補 1 成 10，8 剩下 7，10 + 7 = 17。',
+      ),
+      MathQ(
+        prompt: '10 + 10 = ?',
+        options: ['10', '18', '20', '30'],
+        correctIndex: 2,
+        explanation: '兩個十合起來是 20。',
+      ),
+      MathQ(
+        prompt: '12 + 8 = ?',
+        options: ['18', '19', '20', '21'],
+        correctIndex: 2,
+        explanation: '12 + 8 = 20。',
+      ),
+      MathQ(
+        prompt: '6 + 7 和 7 + 6 的和怎樣？',
+        options: ['一樣', '6 + 7 比較大', '7 + 6 比較大', '都超過 20'],
+        correctIndex: 0,
+        explanation: '兩題都是 13。',
+      ),
+      MathQ(
+        prompt: '有 9 張貼紙，再得到 6 張，一共幾張？',
+        options: ['13', '14', '15', '16'],
+        correctIndex: 2,
+        explanation: '9 + 6 = 15。',
+      ),
+      MathQ(
+        prompt: '8 + 5 = ?',
+        options: ['11', '12', '13', '14'],
+        correctIndex: 2,
+        explanation: '8 + 5 = 13。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 2,
+    title: '長度',
+    summary: '拉直、對齊，再用同一種單位量長度',
+    opening: '兩枝鉛筆，一枝斜放、一枝平放。小華先讓它們都平放，再把一端靠在同一條線上。',
+    method:
+        '比長短前要拉直，並把一端對齊。另一端比較遠的比較長，兩端都重疊就是一樣長。量的時候只用一種單位，一個接一個，中間不留空。兩段接起來用加法，拿掉一段用減法。',
+    examples: const [
+      MathExample('綠鉛筆終點比較遠', '綠鉛筆比較長'),
+      MathExample('6 根積木接 3 根', '一共 9 根積木長'),
+      MathExample('10 個迴紋針拿掉 4 個長', '還剩 6 個迴紋針長'),
+    ],
+    points: const [
+      MathPoint('📏', '一端對齊', '起點相同，才看得出終點誰比較遠。'),
+      MathPoint('🧱', '同一單位', '積木和迴紋針不能混著數。'),
+      MathPoint('➕', '長度加減', '接起來相加，拿掉相減。'),
+    ],
+    steps: const [
+      '把兩枝筆的一端靠齊，說出誰比較長',
+      '用迴紋針量鉛筆，記下幾個長',
+      '把兩段積木接起來，算出總長度',
+    ],
+    tip: '顏色和粗細都不是長度。一定要看從起點到終點的距離。',
+    objectives: const [
+      '能一端對齊後比較長短',
+      '能用同一種單位量長度',
+      '能做同一單位的長度加減',
+    ],
+    keyPoints: const [
+      '拉直後一端對齊',
+      '單位要相同並且首尾相接',
+      '接起來用加，拿掉用減',
+    ],
+    vocabulary: const [
+      VocabItem(term: '長度', meaning: '一端到另一端的距離', example: '對齊以後才能比較長度'),
+      VocabItem(term: '單位', meaning: '重複用來量的東西', example: '迴紋針可以當長度的單位'),
+      VocabItem(term: '對齊', meaning: '起點放在同一個地方', example: '兩枝筆要先一端對齊'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '比長短時，一端要先？',
+        options: ['對齊', '染色', '捲起來', '剪斷'],
+        correctIndex: 0,
+        explanation: '起點對齊，終點的遠近才有意義。',
+      ),
+      MathQ(
+        prompt: '6 根積木接上 3 根，一共幾根長？',
+        options: ['3', '8', '9', '18'],
+        correctIndex: 2,
+        explanation: '6 + 3 = 9。',
+      ),
+      MathQ(
+        prompt: '10 個迴紋針長，拿掉 4 個長，還剩幾個長？',
+        options: ['4', '6', '14', '40'],
+        correctIndex: 1,
+        explanation: '10 - 4 = 6。',
+      ),
+      MathQ(
+        prompt: '粗的鉛筆一定比較長嗎？',
+        options: ['不一定', '一定', '粗的一定比較短', '細的不能比'],
+        correctIndex: 0,
+        explanation: '粗細不是長度，還是要對齊再比。',
+      ),
+      MathQ(
+        prompt: '兩枝筆的終點重疊，表示？',
+        options: ['一樣長', '左邊比較長', '右邊比較長', '還沒比'],
+        correctIndex: 0,
+        explanation: '終點在同一個地方，長度相同。',
+      ),
+      MathQ(
+        prompt: '單位中間留了空隙，量出來會？',
+        options: ['更準', '不準', '變成個數以外的東西', '不用再數'],
+        correctIndex: 1,
+        explanation: '有空隙就沒有真正首尾相接。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 3,
+    title: '20 以內的減法',
+    summary: '被減數在 20 以內，用加法檢查剩下多少',
+    opening: '盒子裡有 20 顆珠子，小華拿走 8 顆。她想：8 再加幾顆會回到 20。',
+    method:
+        '20 - 8 可以想 8 + ? = 20，答案是 12。被減數比 10 大時，也可以先減到 10，再減剩下的。算完把減數和答案加回去，要等於原來的數。',
+    examples: const [
+      MathExample('20 - 8', '8 + 12 = 20，剩下 12'),
+      MathExample('15 - 7', '7 + 8 = 15，剩下 8'),
+      MathExample('13 - 5', '先減 3 到 10，再減 2，剩下 8'),
+    ],
+    points: const [
+      MathPoint('➖', '剩下多少', '拿走的數量用減法。'),
+      MathPoint('🔁', '加法檢查', '減數加答案，要回到被減數。'),
+      MathPoint('🔟', '可以先到十', '先減成 10，再繼續減。'),
+    ],
+    steps: const [
+      '拿出 20 個小東西，拿走 8 個並數剩下的',
+      '用 8 + ? = 20 再算一次',
+      '換兩題 20 以內的減法，都用加法檢查',
+    ],
+    tip: '20 以內最大的被減數是 20。檢查時不要把答案和被減數加在一起。',
+    objectives: const [
+      '能計算 20 以內的減法',
+      '能用對應的加法找出差',
+      '能檢查減法答案',
+    ],
+    keyPoints: const [
+      '差可以用加法想出來',
+      '20 - 8 = 12',
+      '減數加差要等於被減數',
+    ],
+    vocabulary: const [
+      VocabItem(term: '被減數', meaning: '一開始的數量', example: '20 - 8 的被減數是 20'),
+      VocabItem(term: '減數', meaning: '拿走的數量', example: '20 - 8 的減數是 8'),
+      VocabItem(term: '差', meaning: '減完剩下的數', example: '20 - 8 的差是 12'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '20 - 8 = ?',
+        options: ['10', '11', '12', '13'],
+        correctIndex: 2,
+        explanation: '8 + 12 = 20，所以剩下 12。',
+      ),
+      MathQ(
+        prompt: '15 - 7 = ?',
+        options: ['6', '7', '8', '9'],
+        correctIndex: 2,
+        explanation: '7 + 8 = 15。',
+      ),
+      MathQ(
+        prompt: '18 - 9 = ?',
+        options: ['7', '8', '9', '10'],
+        correctIndex: 2,
+        explanation: '9 + 9 = 18，剩下 9。',
+      ),
+      MathQ(
+        prompt: '有 16 顆，拿走 7 顆，還剩幾顆？',
+        options: ['7', '8', '9', '10'],
+        correctIndex: 2,
+        explanation: '16 - 7 = 9。',
+      ),
+      MathQ(
+        prompt: '14 - 6 = ?',
+        options: ['6', '7', '8', '9'],
+        correctIndex: 2,
+        explanation: '6 + 8 = 14。',
+      ),
+      MathQ(
+        prompt: '11 - 3 = ?',
+        options: ['7', '8', '9', '14'],
+        correctIndex: 1,
+        explanation: '11 - 3 = 8。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 4,
+    title: '100 以內的數',
+    summary: '數到 100，認識十位、個位和大小',
+    opening: '小華把積木十個捆成一捆。10 捆排好就是 100，其中 6 捆又加 4 個，就是 64。',
+    method:
+        '100 是 10 個十。64 的十位是 6、個位是 4。比較時先看十位，十位相同再看個位。可以一個一個數，也可以 5 個或 10 個一數。99 的下一個是 100。',
+    examples: const [
+      MathExample('10 捆', '10 個十，是 100'),
+      MathExample('64', '6 個十和 4 個一'),
+      MathExample('70 和 67', '70 比較大'),
+    ],
+    points: const [
+      MathPoint('💯', '十個十', '一直加十，加到 10 次就是 100。'),
+      MathPoint('🔢', '兩個位', '左邊十位，右邊個位。'),
+      MathPoint('⚖️', '比大小', '十位大的比較大。'),
+    ],
+    steps: const [
+      '十個十個數，從 10 數到 100',
+      '寫出 64，說出幾個十、幾個一',
+      '比較 70 和 67，說出理由',
+    ],
+    tip: '個位是 0 的數是整十。100 的前一個是 99。',
+    objectives: const [
+      '能數到 100',
+      '能指出十位和個位',
+      '能比較 100 以內兩個數',
+    ],
+    keyPoints: const [
+      '100 有 10 個十',
+      '先比十位，再比個位',
+      '99 的後一個是 100',
+    ],
+    vocabulary: const [
+      VocabItem(term: '十位', meaning: '表示幾個十', example: '64 的十位是 6'),
+      VocabItem(term: '個位', meaning: '表示幾個一', example: '64 的個位是 4'),
+      VocabItem(term: '百', meaning: '10 個十的數量', example: '1 個百是 100'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '64 有幾個十？',
+        options: ['4', '6', '10', '60'],
+        correctIndex: 1,
+        explanation: '64 是 6 個十和 4 個一。',
+      ),
+      MathQ(
+        prompt: '64 有幾個一？',
+        options: ['4', '6', '10', '46'],
+        correctIndex: 0,
+        explanation: '個位是 4。',
+      ),
+      MathQ(
+        prompt: '99 的後一個數是多少？',
+        options: ['90', '98', '100', '109'],
+        correctIndex: 2,
+        explanation: '99 + 1 = 100。',
+      ),
+      MathQ(
+        prompt: '70 和 67，哪一個比較大？',
+        options: ['67', '70', '一樣大', '不能比'],
+        correctIndex: 1,
+        explanation: '70 有 7 個十，67 只有 6 個十。',
+      ),
+      MathQ(
+        prompt: '10 個一數：40、50、60，下一個是多少？',
+        options: ['61', '70', '80', '100'],
+        correctIndex: 1,
+        explanation: '每次加 10，60 的下一個是 70。',
+      ),
+      MathQ(
+        prompt: '100 的前一個數是多少？',
+        options: ['90', '99', '101', '89'],
+        correctIndex: 1,
+        explanation: '100 減 1 是 99。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 5,
+    title: '形狀與形體',
+    summary: '比較平面形狀，並認識可以疊或會滾的形體',
+    opening: '小華拿兩張正方形紙和一個圓罐。紙可以疊起來看是否一樣大，圓罐則要看立著還是躺著。',
+    method:
+        '平面圖形看邊和角。形狀、大小都相同才能完全重疊，轉動或翻面不會改變形狀。方盒有平面，可以堆疊。球沒有平面，會滾。圓罐立起來放得穩，放倒才滾。',
+    examples: const [
+      MathExample('兩張一樣大的正方形', '可以完全重疊'),
+      MathExample('直立的圓罐', '底是平的，放得穩'),
+      MathExample('皮球', '沒有平面，會滾'),
+    ],
+    points: const [
+      MathPoint('⬜', '形狀和大小', '兩個條件都相同，才算完全一樣。'),
+      MathPoint('📦', '有平面就能疊', '方盒和直立的圓罐都可以放穩。'),
+      MathPoint('⚽', '沒有平面會滾', '球怎麼放都不容易疊高。'),
+    ],
+    steps: const [
+      '疊兩張圖形，看邊角是否完全對上',
+      '把書放在方盒上，再放在球上，比較結果',
+      '圓罐直立一次、放倒一次',
+    ],
+    tip: '只換顏色，形狀不會跟著變。大小不同就不能完全重疊。',
+    objectives: const [
+      '能判斷兩個圖形是否形狀相同、大小相同',
+      '能說出哪些形體可以堆疊',
+      '能說明圓罐直立和放倒的差別',
+    ],
+    keyPoints: const [
+      '完全重疊要形狀和大小都一樣',
+      '平面讓形體放得穩',
+      '球沒有平面',
+    ],
+    vocabulary: const [
+      VocabItem(term: '重疊', meaning: '邊和角都對在一起', example: '一樣大的正方形可以完全重疊'),
+      VocabItem(term: '形體', meaning: '拿得起來的立體物品', example: '圓罐和皮球都是形體'),
+      VocabItem(term: '平面', meaning: '平平的面', example: '方盒有平面，所以能堆疊'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '兩張正方形紙要怎樣才算完全一樣？',
+        options: ['形狀和大小都一樣', '只要都是紙', '只要顏色一樣', '只要都有四個角，大小不管'],
+        correctIndex: 0,
+        explanation: '都有四個角只表示形狀相近，還要比大小。',
+      ),
+      MathQ(
+        prompt: '皮球為什麼不容易疊高？',
+        options: ['沒有平面', '因為是圓的顏色', '因為太小', '因為有四個角'],
+        correctIndex: 0,
+        explanation: '表面是彎的，上面的東西會滑掉。',
+      ),
+      MathQ(
+        prompt: '圓罐放倒時會？',
+        options: ['滾動', '變成方盒', '角變多', '不能移動'],
+        correctIndex: 0,
+        explanation: '放倒後彎彎的側面著地，就會滾。',
+      ),
+      MathQ(
+        prompt: '大三角形和小三角形能完全重疊嗎？',
+        options: ['能', '不能', '翻面就一定能', '顏色一樣就能'],
+        correctIndex: 1,
+        explanation: '大小不同，小的蓋不住大的。',
+      ),
+      MathQ(
+        prompt: '哪一個最能往上疊？',
+        options: ['方盒', '皮球', '放倒的圓罐', '彈珠'],
+        correctIndex: 0,
+        explanation: '方盒的面是平的。',
+      ),
+      MathQ(
+        prompt: '正方形轉一個方向後？',
+        options: ['還是正方形', '變成圓形', '少一個角', '不能再比大小'],
+        correctIndex: 0,
+        explanation: '轉動不改變邊和角。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 6,
+    title: '數數看有多少元',
+    summary: '把 1 元、5 元、10 元、50 元和 100 元加起來',
+    opening: '小華想知道口袋裡有多少元。她先把 10 元放一堆、5 元放一堆，再一個一個加。',
+    method:
+        '錢幣有 1 元、5 元、10 元、50 元和 100 元。可以先數有幾個 10 元，再數 5 元和 1 元。2 個 5 元是 10 元，5 個 10 元是 50 元，2 個 50 元是 100 元。',
+    examples: const [
+      MathExample('3 個 10 元', '一共 30 元'),
+      MathExample('1 個 50 元和 1 個 10 元', '一共 60 元'),
+      MathExample('4 個 5 元', '一共 20 元'),
+    ],
+    points: const [
+      MathPoint('🪙', '先認面額', '看數字，不只看顏色。'),
+      MathPoint('🔟', '十元好數', '幾個 10 元，就有幾個十。'),
+      MathPoint('➕', '全部加完', '每一枚錢幣都要算到。'),
+    ],
+    steps: const [
+      '把錢幣按面額分成幾堆',
+      '先算 10 元有幾個，再算 5 元和 1 元',
+      '說出一共多少元',
+    ],
+    tip: '較大的面額先加，最後再補 1 元，比較不會漏。',
+    objectives: const [
+      '能認出 1 元到 100 元',
+      '能把相同面額先加在一起',
+      '能算出全部一共多少元',
+    ],
+    keyPoints: const [
+      '幾個 10 元就是幾個十',
+      '2 個 5 元等於 10 元',
+      '2 個 50 元等於 100 元',
+    ],
+    vocabulary: const [
+      VocabItem(term: '面額', meaning: '一個錢幣是多少元', example: '10 元的面額比 5 元大'),
+      VocabItem(term: '錢幣', meaning: '硬幣或紙鈔', example: '1 元和 50 元都是錢幣'),
+      VocabItem(term: '一共', meaning: '全部加起來', example: '3 個 10 元一共 30 元'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '3 個 10 元是多少元？',
+        options: ['13 元', '30 元', '40 元', '310 元'],
+        correctIndex: 1,
+        explanation: '3 個十是 30 元。',
+      ),
+      MathQ(
+        prompt: '4 個 5 元是多少元？',
+        options: ['9 元', '20 元', '45 元', '54 元'],
+        correctIndex: 1,
+        explanation: '5 + 5 + 5 + 5 = 20。',
+      ),
+      MathQ(
+        prompt: '1 個 50 元和 1 個 10 元，一共多少元？',
+        options: ['15 元', '40 元', '60 元', '150 元'],
+        correctIndex: 2,
+        explanation: '50 + 10 = 60。',
+      ),
+      MathQ(
+        prompt: '2 個 50 元是多少元？',
+        options: ['52 元', '70 元', '100 元', '150 元'],
+        correctIndex: 2,
+        explanation: '50 + 50 = 100。',
+      ),
+      MathQ(
+        prompt: '2 個 5 元可以換成？',
+        options: ['1 個 10 元', '1 個 1 元', '1 個 50 元', '2 個 10 元'],
+        correctIndex: 0,
+        explanation: '5 + 5 = 10。',
+      ),
+      MathQ(
+        prompt: '1 個 10 元和 3 個 1 元，一共多少元？',
+        options: ['4 元', '13 元', '31 元', '103 元'],
+        correctIndex: 1,
+        explanation: '10 + 1 + 1 + 1 = 13。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 7,
+    title: '幾月幾日星期幾',
+    summary: '用月曆找出日期、星期和前後一天',
+    opening: '月曆停在 4 月。小華找到 12 日，沿同一直欄往上看，欄首寫著星期五。',
+    method:
+        '月曆同時有月份、日期和星期。一星期有 7 天，直的一欄通常是同一個星期幾。今天的前一天是昨天，後一天是明天。月份從 1 月排到 12 月，12 月之後是 1 月。',
+    examples: const [
+      MathExample('4 月 12 日的明天', '4 月 13 日'),
+      MathExample('星期五的後一天', '星期六'),
+      MathExample('4 月的下一個月', '5 月'),
+    ],
+    points: const [
+      MathPoint('📅', '三個訊息', '幾月、幾日、星期幾可以一起說。'),
+      MathPoint('7️⃣', '七天', '星期過完七天就換下一週。'),
+      MathPoint('↕️', '直欄', '同一直欄常常是同一個星期幾。'),
+    ],
+    steps: const [
+      '在月曆指出今天是幾月幾日星期幾',
+      '找出昨天和明天',
+      '說出這個月的下一個月',
+    ],
+    tip: '先找日期，再沿直欄看星期。換月以後，日期從 1 日重新算。',
+    objectives: const [
+      '能讀出幾月幾日星期幾',
+      '能說出昨天和明天',
+      '能說出前後的月份和星期',
+    ],
+    keyPoints: const [
+      '一星期有 7 天',
+      '同一直欄通常星期相同',
+      '12 月的下一個月是 1 月',
+    ],
+    vocabulary: const [
+      VocabItem(
+          term: '月曆', meaning: '排出一個月日期和星期的表', example: '月曆上可以找到 4 月 12 日'),
+      VocabItem(term: '星期', meaning: '一週七天的名稱', example: '星期五的後一天是星期六'),
+      VocabItem(term: '日期', meaning: '幾月幾日', example: '今天的日期是 4 月 12 日'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '一星期有幾天？',
+        options: ['5 天', '6 天', '7 天', '30 天'],
+        correctIndex: 2,
+        explanation: '一星期有 7 天。',
+      ),
+      MathQ(
+        prompt: '星期五的後一天是？',
+        options: ['星期四', '星期六', '星期日', '星期一'],
+        correctIndex: 1,
+        explanation: '星期五再過一天是星期六。',
+      ),
+      MathQ(
+        prompt: '4 月 12 日的明天是？',
+        options: ['4 月 11 日', '4 月 13 日', '5 月 12 日', '3 月 12 日'],
+        correctIndex: 1,
+        explanation: '同一個月份，日期加 1。',
+      ),
+      MathQ(
+        prompt: '4 月的下一個月是？',
+        options: ['3 月', '5 月', '6 月', '2 月'],
+        correctIndex: 1,
+        explanation: '4 月過了是 5 月。',
+      ),
+      MathQ(
+        prompt: '今天的後一天叫做？',
+        options: ['昨天', '明天', '下個月', '明年'],
+        correctIndex: 1,
+        explanation: '比今天晚一天是明天。',
+      ),
+      MathQ(
+        prompt: '月曆直的一欄通常是？',
+        options: ['同一個星期幾', '同一日', '不同年份', '只有 1 日'],
+        correctIndex: 0,
+        explanation: '直欄對齊的日子，星期常常相同。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 8,
+    title: '兩位數的加減法',
+    summary: '位數對齊，加法滿十要進位',
+    opening:
+        '小華算 32 + 15。個位 2 + 5 = 7，十位 3 + 1 = 4，和是 47。接著她遇到 29 + 4，個位 9 + 4 滿十，就要進位。',
+    method: '個位和個位對齊，十位和十位對齊。個位的和滿 10，寫下個位，並向十位進 1。減法先做個位夠減的題目。算完可以用相反的運算檢查。',
+    examples: const [
+      MathExample('32 + 15', '個位 7、十位 4，和是 47'),
+      MathExample('29 + 4', '個位 13，寫 3 進 1，和是 33'),
+      MathExample('76 - 22', '個位 4、十位 5，差是 54'),
+    ],
+    points: const [
+      MathPoint('📐', '對齊', '不能把個位加到十位上。'),
+      MathPoint('⬆️', '進位', '個位滿十，十位多加 1。'),
+      MathPoint('✅', '夠減就直接減', '個位比較大或一樣大，不用退位。'),
+    ],
+    steps: const [
+      '寫一題不進位加法的直式',
+      '再寫一題需要進位的加法',
+      '做一題不用退位的減法，用加法檢查',
+    ],
+    tip: '進位的 1 寫在十位旁邊。個位不夠減的題目，這一冊先不要做。',
+    objectives: const [
+      '能做兩位數不進位的加法',
+      '能做個位需要進位的加法',
+      '能做不用退位的兩位數減法',
+    ],
+    keyPoints: const [
+      '個位對個位，十位對十位',
+      '滿十向十位進 1',
+      '不用退位時個位直接相減',
+    ],
+    vocabulary: const [
+      VocabItem(term: '進位', meaning: '滿十後向左加 1', example: '9 + 4 滿十，要進位'),
+      VocabItem(term: '個位', meaning: '最右邊的數位', example: '32 的個位是 2'),
+      VocabItem(term: '十位', meaning: '個位左邊的數位', example: '32 的十位是 3'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '32 + 15 = ?',
+        options: ['37', '47', '53', '45'],
+        correctIndex: 1,
+        explanation: '個位 2 + 5 = 7，十位 3 + 1 = 4，和是 47。',
+      ),
+      MathQ(
+        prompt: '29 + 4 = ?',
+        options: ['25', '33', '69', '23'],
+        correctIndex: 1,
+        explanation: '9 + 4 = 13，寫 3 進 1，十位 2 + 1 = 3，和是 33。',
+      ),
+      MathQ(
+        prompt: '58 + 16 = ?',
+        options: ['64', '74', '76', '68'],
+        correctIndex: 1,
+        explanation: '8 + 6 = 14，寫 4 進 1，十位 5 + 1 + 1 = 7，和是 74。',
+      ),
+      MathQ(
+        prompt: '76 - 22 = ?',
+        options: ['54', '56', '98', '44'],
+        correctIndex: 0,
+        explanation: '個位 6 - 2 = 4，十位 7 - 2 = 5，差是 54。',
+      ),
+      MathQ(
+        prompt: '90 - 40 = ?',
+        options: ['50', '60', '130', '40'],
+        correctIndex: 0,
+        explanation: '9 個十減 4 個十是 5 個十，等於 50。',
+      ),
+      MathQ(
+        prompt: '47 - 5 = ?',
+        options: ['40', '42', '52', '45'],
+        correctIndex: 1,
+        explanation: '個位 7 - 5 = 2，十位仍是 4，答案是 42。',
+      ),
+    ],
+  ),
+  mathUnit(
+    publisher: TextbookPublisher.hanlin,
+    semester: Semester.second,
+    unit: 9,
+    title: '分類整理',
+    summary: '選定標準分類，再把數量整理成紀錄',
+    opening: '抽屜裡有圓形磁鐵和方形磁鐵。小華先按形狀分成兩堆，再數每一堆，最後做成一張表。',
+    method:
+        '分類前先決定標準，例如形狀或顏色。同一類放在一起後，用畫記一個一個記。滿 5 個可以成一組。整理進表格後，就能比較哪一類多、哪一類少，或是不是一樣多。',
+    examples: const [
+      MathExample('圓形 ||||', '4 個圓形磁鐵'),
+      MathExample('圓形 4、方形 7', '方形比較多'),
+      MathExample('紅 5、藍 5', '兩類一樣多'),
+    ],
+    points: const [
+      MathPoint('🗂️', '先說標準', '看形狀就不要混進顏色。'),
+      MathPoint('✏️', '畫記', '一個記號代表一個。'),
+      MathPoint('📊', '整理比較', '表做好以後才能說誰多誰少。'),
+    ],
+    steps: const [
+      '選一盒物品，決定用什麼分類',
+      '用畫記記下每一類的數量',
+      '填進表格，說出最多和最少的是哪一類',
+    ],
+    tip: '標準一次只用一個。若要換標準，就重新分一次。',
+    objectives: const [
+      '能依一個標準分類',
+      '能用畫記整理數量',
+      '能比較每一類的多和少',
+    ],
+    keyPoints: const [
+      '分類標準要先說清楚',
+      '一個畫記代表一個',
+      '數量相同就是一樣多',
+    ],
+    vocabulary: const [
+      VocabItem(term: '分類', meaning: '按相同的地方分開放', example: '按形狀分類，圓的放一堆'),
+      VocabItem(term: '畫記', meaning: '用記號記下數量', example: '四條畫記表示 4 個'),
+      VocabItem(term: '整理', meaning: '把數過的結果排好', example: '數量整理進表格才好比較'),
+    ],
+    questions: const [
+      MathQ(
+        prompt: '按形狀分類時，圓形應和誰一堆？',
+        options: ['其他圓形', '所有紅色的', '所有大的', '所有方形'],
+        correctIndex: 0,
+        explanation: '標準是形狀，圓形和圓形同一類。',
+      ),
+      MathQ(
+        prompt: '畫記 |||| 是幾個？',
+        options: ['3 個', '4 個', '5 個', '8 個'],
+        correctIndex: 1,
+        explanation: '四條記號是 4 個。',
+      ),
+      MathQ(
+        prompt: '圓形 4 個、方形 7 個，比較多的是？',
+        options: ['圓形', '方形', '一樣多', '不能比'],
+        correctIndex: 1,
+        explanation: '7 比 4 大，方形比較多。',
+      ),
+      MathQ(
+        prompt: '紅 5 個、藍 5 個，結果是？',
+        options: ['紅比較多', '藍比較少', '一樣多', '要再分類'],
+        correctIndex: 2,
+        explanation: '兩邊都是 5，一樣多。',
+      ),
+      MathQ(
+        prompt: '星星 8 個、月亮 3 個，星星比月亮多幾個？',
+        options: ['3 個', '5 個', '11 個', '8 個'],
+        correctIndex: 1,
+        explanation: '8 - 3 = 5。',
+      ),
+      MathQ(
+        prompt: '分類整理時，標準應該？',
+        options: ['先決定，而且一次用一個', '每次隨便換', '看心情', '不用告訴別人'],
+        correctIndex: 0,
+        explanation: '標準說清楚，分出來的結果才一致。',
+      ),
+    ],
+  ),
+];

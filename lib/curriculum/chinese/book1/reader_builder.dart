@@ -28,9 +28,10 @@ Question readerQ({
   );
 }
 
-/// 國語第一冊一課：自編短文、生字、語詞與測驗。
+/// 國語第一冊、第二冊一課：自編短文、生字、語詞與測驗。
 ///
 /// 課名與生字對齊 115 學年度公開字表；句子為小學堂自編，不摘錄課本原文。
+/// 同一課若有同音字（例如「遊」和「游」），仍各自保留，題庫不再問「哪一個字念這個音」。
 Lesson readerLesson({
   required TextbookPublisher publisher,
   required int unit,
@@ -46,15 +47,14 @@ Lesson readerLesson({
   required String tip,
   required List<Question> questions,
   int estimatedMinutes = 12,
+  Semester semester = Semester.first,
+  TextbookPart part = TextbookPart.volumeOne,
 }) {
   if (chars.length < 4) {
     throw StateError('$title 的生字不足');
   }
   if (chars.map((c) => c.char).toSet().length != chars.length) {
     throw StateError('$title 有重複生字');
-  }
-  if (chars.map((c) => c.zhuyin).toSet().length != chars.length) {
-    throw StateError('$title 有兩個生字注音相同');
   }
   if (chars.map((c) => c.meaning).toSet().length != chars.length) {
     throw StateError('$title 有兩個生字解釋相同');
@@ -72,7 +72,13 @@ Lesson readerLesson({
   }
 
   final code = publisher.code;
-  final id = 'cl-c-1-1-$code-v1-${unit.toString().padLeft(2, '0')}';
+  final term = semester == Semester.second ? '2' : '1';
+  final vol = switch (part) {
+    TextbookPart.primer => 'p',
+    TextbookPart.volumeOne => 'v1',
+    TextbookPart.volumeTwo => 'v2',
+  };
+  final id = 'cl-c-1-$term-$code-$vol-${unit.toString().padLeft(2, '0')}';
   final writing = [
     for (final c in chars)
       WritingGlyph(
@@ -87,7 +93,8 @@ Lesson readerLesson({
       .map((c) => '${c.char}　${c.zhuyin}　${c.meaning}（${c.strokes} 畫）')
       .join('\n');
   final stepLines = [
-    for (var i = 0; i < practiceSteps.length; i++) '${i + 1}. ${practiceSteps[i]}',
+    for (var i = 0; i < practiceSteps.length; i++)
+      '${i + 1}. ${practiceSteps[i]}',
   ].join('\n');
   final vocabLines = vocabulary
       .map((v) => '${v.term}：${v.meaning}。${v.example ?? ''}')
@@ -124,18 +131,19 @@ $vocabLines
 $stepLines
 
 $tip
-'''.trim();
+'''
+      .trim();
 
   return Lesson(
     id: id,
     subjectId: 'chinese',
     grade: 1,
     track: CurriculumTrack.core,
-    semester: Semester.first,
+    semester: semester,
     unit: unit,
     unitLabel: unitLabel,
     publisher: publisher,
-    part: TextbookPart.volumeOne,
+    part: part,
     title: title,
     summary: summary,
     estimatedMinutes: estimatedMinutes,
@@ -304,10 +312,15 @@ List<Question> _expandQuestions({
     );
   }
   for (final c in chars) {
+    final sameReading = chars.where((other) => other.zhuyin == c.zhuyin).length;
+    if (sameReading != 1) continue;
     add(
       prompt: '哪一個字念「${c.zhuyin}」？',
       correct: c.char,
-      pool: chars.where((other) => other.zhuyin != c.zhuyin).map((e) => e.char).toList(),
+      pool: chars
+          .where((other) => other.zhuyin != c.zhuyin)
+          .map((e) => e.char)
+          .toList(),
       explanation: '${c.zhuyin} 是「${c.char}」。',
     );
   }

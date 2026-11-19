@@ -28,7 +28,7 @@ enum Semester {
   const Semester(this.label);
 }
 
-/// 國小教科書版本。一年級上學期的國語、數學會依版本分單元。
+/// 國小教科書版本。一年級的國語、數學會依版本分單元。
 enum TextbookPublisher {
   kangxuan('康軒', 'kx'),
   hanlin('翰林', 'hl'),
@@ -39,10 +39,11 @@ enum TextbookPublisher {
   const TextbookPublisher(this.label, this.code);
 }
 
-/// 一年級上學期國語的冊別。首冊是注音，第一冊是正式課文。
+/// 一年級國語的冊別。首冊是注音，第一冊是上學期，第二冊是下學期。
 enum TextbookPart {
   primer('首冊', 0),
-  volumeOne('第一冊', 1);
+  volumeOne('第一冊', 1),
+  volumeTwo('第二冊', 2);
 
   final String label;
   final int order;

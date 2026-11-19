@@ -3,6 +3,9 @@ import '../../models/question.dart';
 import 'book1/hanlin_book.dart';
 import 'book1/kangxuan_book.dart';
 import 'book1/nani_book.dart';
+import 'book2/hanlin_book.dart';
+import 'book2/kangxuan_book.dart';
+import 'book2/nani_book.dart';
 import 'primer/hanlin_primer.dart';
 import 'primer/kangxuan_primer.dart';
 import 'primer/nani_primer.dart';
@@ -10,15 +13,19 @@ import 'primer/nani_primer.dart';
 /// 國語課程（國小 1–4 年級，上下學期）
 ///
 /// 一年級上學期依康軒、翰林、南一 115 學年度的首冊與第一冊編寫。
-/// 練習短文為自編，對齊各版本課次與生字，不摘錄出版社原文。
-/// 一年級下學期起仍依 108 課綱學習內容編寫。
+/// 一年級下學期另有三版本第二冊：課名與生字對齊公開字表。
+/// 練習短文為自編，不摘錄出版社原文。
+/// 一年級下學期起的課綱單元仍保留。
 final List<Lesson> kChineseLessons = [
   ...kKangxuanPrimerLessons,
   ...kKangxuanBookLessons,
+  ...kKangxuanBook2Lessons,
   ...kHanlinPrimerLessons,
   ...kHanlinBookLessons,
+  ...kHanlinBook2Lessons,
   ...kNaniPrimerLessons,
   ...kNaniBookLessons,
+  ...kNaniBook2Lessons,
   ...kChineseCoreLessons,
 ];
 
@@ -196,8 +203,7 @@ const List<Lesson> kChineseCoreLessons = [
     unit: 5,
     title: '學校的一天',
     summary: '從上學到放學',
-    content:
-        '早上，我和同學說早；\n上課專心聽講、下課和好朋友玩遊戲；\n中午，跟老師、同學吃營養午餐；\n放學前，整理書包、說再見。',
+    content: '早上，我和同學說早；\n上課專心聽講、下課和好朋友玩遊戲；\n中午，跟老師、同學吃營養午餐；\n放學前，整理書包、說再見。',
     estimatedMinutes: 10,
     objectives: [
       '能依序說出上學到放學的主要活動',
@@ -424,7 +430,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '鳥兒的家在樹上，那叫作鳥巢。\n魚兒的家在水裡，那叫作河流。\n蜜蜂住在蜂巢裡，小狗住在狗屋裡。\n每種動物都有自己舒適的家。\n\n生字：巢、流、蜂、屋、適',
+    content:
+        '鳥兒的家在樹上，那叫作鳥巢。\n魚兒的家在水裡，那叫作河流。\n蜜蜂住在蜂巢裡，小狗住在狗屋裡。\n每種動物都有自己舒適的家。\n\n生字：巢、流、蜂、屋、適',
     questions: [
       Question(
         id: 'q1',
@@ -466,7 +473,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '書是我的好朋友。\n翻開書本，我可以到山上看日出，\n到海邊聽浪花，到古時候看歷史。\n多閱讀，知識就像滾雪球，越滾越大。\n\n生字：翻、浪、歷、識、雪',
+    content:
+        '書是我的好朋友。\n翻開書本，我可以到山上看日出，\n到海邊聽浪花，到古時候看歷史。\n多閱讀，知識就像滾雪球，越滾越大。\n\n生字：翻、浪、歷、識、雪',
     questions: [
       Question(
         id: 'q1',
@@ -641,7 +649,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '藍藍的天空，白白的雲，\n綠綠的草地，紅紅的花朵。\n大自然是最棒的畫家，\n用顏色畫出美麗的世界。\n\n形容詞疊字：藍藍的、白白的、綠綠的',
+    content:
+        '藍藍的天空，白白的雲，\n綠綠的草地，紅紅的花朵。\n大自然是最棒的畫家，\n用顏色畫出美麗的世界。\n\n形容詞疊字：藍藍的、白白的、綠綠的',
     questions: [
       Question(
         id: 'q1',
@@ -865,7 +874,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '中秋節是農曆八月十五，是團圓的日子。\n晚上，全家人圍坐一起賞月、吃月餅、吃柚子。\n月亮又大又圓，就像媽媽慈祥的臉。\n\n詞語：團圓、慈祥、柚子、月餅',
+    content:
+        '中秋節是農曆八月十五，是團圓的日子。\n晚上，全家人圍坐一起賞月、吃月餅、吃柚子。\n月亮又大又圓，就像媽媽慈祥的臉。\n\n詞語：團圓、慈祥、柚子、月餅',
     questions: [
       Question(
         id: 'q1',
@@ -907,7 +917,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '很久以前，有一隻口渴的烏鴉，找到一個瓶子。\n瓶子裡有水，但水太少，烏鴉的嘴喝不到。\n烏鴉靈機一動，把石頭一顆顆丟進瓶子，水位慢慢升高，終於喝到水了。\n\n道理：遇到困難要動腦思考，就能找到方法。',
+    content:
+        '很久以前，有一隻口渴的烏鴉，找到一個瓶子。\n瓶子裡有水，但水太少，烏鴉的嘴喝不到。\n烏鴉靈機一動，把石頭一顆顆丟進瓶子，水位慢慢升高，終於喝到水了。\n\n道理：遇到困難要動腦思考，就能找到方法。',
     questions: [
       Question(
         id: 'q1',
@@ -951,7 +962,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '愛迪生小時候喜歡問問題，大家都覺得他很奇怪。\n長大後，他不怕失敗，試了一千多次，終於發明了電燈。\n他說：「天才是一分的天分加上九十九分的努力。」\n\n從愛迪生的故事我們學到：成功來自不斷的努力。',
+    content:
+        '愛迪生小時候喜歡問問題，大家都覺得他很奇怪。\n長大後，他不怕失敗，試了一千多次，終於發明了電燈。\n他說：「天才是一分的天分加上九十九分的努力。」\n\n從愛迪生的故事我們學到：成功來自不斷的努力。',
     questions: [
       Question(
         id: 'q1',
@@ -993,7 +1005,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '今天老師帶我們參觀圖書館。\n一走進大門，書香撲鼻而來。\n書架上的書分類整齊：故事書、科學書、歷史書……\n只要用心翻閱，就能打開知識的大門。',
+    content:
+        '今天老師帶我們參觀圖書館。\n一走進大門，書香撲鼻而來。\n書架上的書分類整齊：故事書、科學書、歷史書……\n只要用心翻閱，就能打開知識的大門。',
     questions: [
       Question(
         id: 'q1',
@@ -1029,7 +1042,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '夏天，蟋蟀每天唱歌玩耍，螞蟻努力搬運食物。\n冬天來了，蟋蟀沒東西吃，又冷又餓；\n螞蟻家裡溫暖，糧食也充足。\n\n教訓：今天的努力，是為了明天的生活。',
+    content:
+        '夏天，蟋蟀每天唱歌玩耍，螞蟻努力搬運食物。\n冬天來了，蟋蟀沒東西吃，又冷又餓；\n螞蟻家裡溫暖，糧食也充足。\n\n教訓：今天的努力，是為了明天的生活。',
     questions: [
       Question(
         id: 'q1',
@@ -1066,7 +1080,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '台灣雖小，卻擁有高山、平原、海岸、溫泉等豐富地景。\n北部繁華、中部熱情、南部樸實、東部純淨。\n每個地方都有獨特的風土民情。\n\n修辭重點：排比句「北部繁華、中部熱情、南部樸實、東部純淨。」',
+    content:
+        '台灣雖小，卻擁有高山、平原、海岸、溫泉等豐富地景。\n北部繁華、中部熱情、南部樸實、東部純淨。\n每個地方都有獨特的風土民情。\n\n修辭重點：排比句「北部繁華、中部熱情、南部樸實、東部純淨。」',
     questions: [
       Question(
         id: 'q1',
@@ -1109,7 +1124,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '達爾文花了五年環遊世界，仔細觀察不同島嶼上的動物，\n才寫出《物種起源》。\n\n科學家的成就，來自三件事：\n① 好奇心　② 持續觀察　③ 勇於求證',
+    content:
+        '達爾文花了五年環遊世界，仔細觀察不同島嶼上的動物，\n才寫出《物種起源》。\n\n科學家的成就，來自三件事：\n① 好奇心　② 持續觀察　③ 勇於求證',
     questions: [
       Question(
         id: 'q1',
@@ -1151,7 +1167,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '古時候有個人叫季布，答應別人的事一定做到。\n有句話說：「得黃金百斤，不如得季布一諾。」\n意思是：得到一百斤黃金，還不如季布一句承諾值錢。\n\n誠實和守信，比金錢更珍貴。',
+    content:
+        '古時候有個人叫季布，答應別人的事一定做到。\n有句話說：「得黃金百斤，不如得季布一諾。」\n意思是：得到一百斤黃金，還不如季布一句承諾值錢。\n\n誠實和守信，比金錢更珍貴。',
     questions: [
       Question(
         id: 'q1',
@@ -1188,7 +1205,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '地球只有一個，我們要好好愛護它。\n日常生活中可以做：\n• 隨手關燈、關水龍頭\n• 自備購物袋、水壺\n• 垃圾分類、資源回收\n• 節能減碳、多搭大眾運輸\n\n每個小動作，都在為地球減少一分負擔。',
+    content:
+        '地球只有一個，我們要好好愛護它。\n日常生活中可以做：\n• 隨手關燈、關水龍頭\n• 自備購物袋、水壺\n• 垃圾分類、資源回收\n• 節能減碳、多搭大眾運輸\n\n每個小動作，都在為地球減少一分負擔。',
     questions: [
       Question(
         id: 'q1',
@@ -1230,7 +1248,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '巴黎的鐵塔高聳入雲，東京的櫻花嬌豔綻放，\n紐約的高樓比鄰而立，埃及的金字塔神祕古老。\n\n透過閱讀和旅行，我們能開闊視野、尊重不同文化。',
+    content:
+        '巴黎的鐵塔高聳入雲，東京的櫻花嬌豔綻放，\n紐約的高樓比鄰而立，埃及的金字塔神祕古老。\n\n透過閱讀和旅行，我們能開闊視野、尊重不同文化。',
     questions: [
       Question(
         id: 'q1',
@@ -1272,7 +1291,8 @@ const List<Lesson> kChineseCoreLessons = [
       VocabItem(term: '段落', meaning: '依意思分段的文章單位', example: '第一段寫景物'),
       VocabItem(term: '語感', meaning: '對語句是否通順的敏銳度', example: '大聲朗讀培養語感'),
     ],
-    content: '媽媽的手，不是細嫩柔軟的手，\n而是一雙粗糙、布滿皺紋的手。\n那雙手為我煮飯、洗衣、縫補衣裳，\n每一條皺紋，都是愛的痕跡。\n\n修辭：運用對比（不是…而是…）突顯主題。',
+    content:
+        '媽媽的手，不是細嫩柔軟的手，\n而是一雙粗糙、布滿皺紋的手。\n那雙手為我煮飯、洗衣、縫補衣裳，\n每一條皺紋，都是愛的痕跡。\n\n修辭：運用對比（不是…而是…）突顯主題。',
     questions: [
       Question(
         id: 'q1',

@@ -47,7 +47,8 @@ void main() {
       (item) =>
           item.subjectId == 'chinese' &&
           item.grade == 1 &&
-          item.semester == Semester.second,
+          item.semester == Semester.second &&
+          item.writingPractice.isEmpty,
     );
     expect(later.writingPractice, isEmpty);
     await _pump(tester, LessonDetailScreen(lesson: later));
