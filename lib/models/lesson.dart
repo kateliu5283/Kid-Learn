@@ -28,7 +28,7 @@ enum Semester {
   const Semester(this.label);
 }
 
-/// 國小教科書版本。目前用於一年級上學期國語。
+/// 國小教科書版本。一年級上學期的國語、數學會依版本分單元。
 enum TextbookPublisher {
   kangxuan('康軒', 'kx'),
   hanlin('翰林', 'hl'),
@@ -155,7 +155,8 @@ class Lesson {
     if (unitLabel != null) {
       sb.write(' $unitLabel');
     } else if (unit != null) {
-      sb.write(publisher != null ? ' 第 $unit 課' : ' 第 $unit 單元');
+      final unitWord = publisher != null && subjectId == 'chinese' ? '課' : '單元';
+      sb.write(' 第 $unit $unitWord');
     }
     return sb.toString();
   }

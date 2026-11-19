@@ -1,262 +1,22 @@
 import '../../models/lesson.dart';
 import '../../models/question.dart';
+import 'book1/hanlin_book.dart';
+import 'book1/kangxuan_book.dart';
+import 'book1/nani_book.dart';
 
 /// 數學課程（國小 1–2 年級，上下學期）
 ///
-/// **108 課綱數學領域**：低年級著重數與量、幾何、關係、度量與實測、資料與統計之經驗；
-/// 以下單元主題與學期分段對應《十二年國教課程綱要》，不依特定版本教科書。
-const List<Lesson> kMathLessons = [
-  // ======== 一年級 上學期 ========
-  Lesson(
-    id: 'cl-m-1-1-u1',
-    subjectId: 'math',
-    grade: 1,
-    track: CurriculumTrack.core,
-    semester: Semester.first,
-    unit: 1,
-    title: '10 以內的數',
-    summary: '認識 0–10 並數數',
-    content: '我們從 0 數到 10：\n0、1、2、3、4、5、6、7、8、9、10\n\n看圖數數：\n🍎🍎🍎 → 3 顆蘋果\n⭐⭐⭐⭐⭐ → 5 顆星星\n\n把相同數量的東西和數字連起來！',
-    estimatedMinutes: 10,
-    objectives: [
-      '能唱數並指認 0–10',
-      '能將數量與數字對應',
-    ],
-    keyPoints: [
-      '數字順序有前後關係',
-      '點數時一個物件對一個數',
-    ],
-    vocabulary: [
-      VocabItem(term: '數量', meaning: '東西有幾個', example: '3 顆蘋果'),
-      VocabItem(term: '唱數', meaning: '依序念出數字', example: '0、1、2…'),
-    ],
-    questions: [
-      Question(
-        id: 'q1',
-        type: QuestionType.multipleChoice,
-        prompt: '🐶🐶🐶🐶 有幾隻小狗？',
-        options: ['3', '4', '5', '6'],
-        correctIndex: 1,
-      ),
-      Question(
-        id: 'q2',
-        type: QuestionType.multipleChoice,
-        prompt: '數字 7 的前一個數是？',
-        options: ['5', '6', '8', '9'],
-        correctIndex: 1,
-      ),
-      Question(
-        id: 'q3',
-        type: QuestionType.multipleChoice,
-        prompt: '從 1 數到 5，中間不會出現的是？',
-        options: ['2', '3', '4', '6'],
-        correctIndex: 3,
-      ),
-    ],
-  ),
-  Lesson(
-    id: 'cl-m-1-1-u2',
-    subjectId: 'math',
-    grade: 1,
-    track: CurriculumTrack.core,
-    semester: Semester.first,
-    unit: 2,
-    title: '比多少',
-    summary: '比較數量與大小',
-    content: '用「一對一」的方式比一比：\n🍎🍎🍎🍎\n🍐🍐🍐\n\n蘋果比較「多」，梨子比較「少」。\n\n4 比 3 大　寫作 4 > 3\n3 比 4 小　寫作 3 < 4',
-    estimatedMinutes: 10,
-    objectives: [
-      '能用一對一對應比多少',
-      '能使用 > 與 < 表示大小',
-    ],
-    keyPoints: [
-      '先對齊再比較，較容易看出多寡',
-      '數字大表示數量比較多（同單位下）',
-    ],
-    vocabulary: [
-      VocabItem(term: '多', meaning: '數量比較大', example: '蘋果比較多'),
-      VocabItem(term: '少', meaning: '數量比較小', example: '梨子比較少'),
-    ],
-    questions: [
-      Question(
-        id: 'q1',
-        type: QuestionType.multipleChoice,
-        prompt: '5 和 8 哪個比較大？',
-        options: ['5', '8', '一樣大', '不知道'],
-        correctIndex: 1,
-      ),
-      Question(
-        id: 'q2',
-        type: QuestionType.multipleChoice,
-        prompt: '小明 6 支鉛筆，小華 4 支鉛筆，誰的比較多？',
-        options: ['小明', '小華', '一樣多', '都沒有'],
-        correctIndex: 0,
-      ),
-    ],
-  ),
-  Lesson(
-    id: 'cl-m-1-1-u3',
-    subjectId: 'math',
-    grade: 1,
-    track: CurriculumTrack.core,
-    semester: Semester.first,
-    unit: 3,
-    title: '合起來和拿走',
-    summary: '加法與減法的意義',
-    content: '【合起來】\n🍬🍬 和 🍬🍬🍬 合起來 = 🍬🍬🍬🍬🍬\n2 + 3 = 5\n\n【拿走】\n🍪🍪🍪🍪🍪 拿走 2 個 = 🍪🍪🍪\n5 - 2 = 3',
-    estimatedMinutes: 10,
-    objectives: [
-      '能說出「合起來」與「拿走」的意義',
-      '能解 10 以內加減問題',
-    ],
-    keyPoints: [
-      '加法是把兩堆合起來',
-      '減法是從整體拿走一部分',
-    ],
-    vocabulary: [
-      VocabItem(term: '合起來', meaning: '兩部分變成全部', example: '2+3=5'),
-      VocabItem(term: '拿走', meaning: '從全部去掉一部分', example: '5-2=3'),
-    ],
-    questions: [
-      Question(
-        id: 'q1',
-        type: QuestionType.multipleChoice,
-        prompt: '4 + 3 = ?',
-        options: ['5', '6', '7', '8'],
-        correctIndex: 2,
-      ),
-      Question(
-        id: 'q2',
-        type: QuestionType.multipleChoice,
-        prompt: '9 - 4 = ?',
-        options: ['3', '4', '5', '6'],
-        correctIndex: 2,
-      ),
-      Question(
-        id: 'q3',
-        type: QuestionType.multipleChoice,
-        prompt: '姊姊有 6 顆糖，給妹妹 2 顆，還剩幾顆？',
-        options: ['2', '3', '4', '5'],
-        correctIndex: 2,
-        explanation: '6 − 2 = 4 顆',
-      ),
-    ],
-  ),
-  Lesson(
-    id: 'cl-m-1-1-u4',
-    subjectId: 'math',
-    grade: 1,
-    track: CurriculumTrack.core,
-    semester: Semester.first,
-    unit: 4,
-    title: '順序與位置',
-    summary: '認識第幾個',
-    content: '小朋友排隊：\n小明、小華、小美、小強、小芳\n\n從前面數：\n第 1 個是小明，第 3 個是小美。\n\n從後面數：\n第 1 個是小芳，第 2 個是小強。',
-    estimatedMinutes: 10,
-    objectives: [
-      '能辨識「第幾個」與「從哪一邊數」',
-      '能解簡單排隊序位問題',
-    ],
-    keyPoints: [
-      '「第幾個」要說清楚從哪一端開始數',
-      '總人數與從後往前數可以互相推算',
-    ],
-    vocabulary: [
-      VocabItem(term: '第幾個', meaning: '順序中的位置', example: '從前面數第 3 個'),
-      VocabItem(term: '前面／後面', meaning: '數的方向', example: '從後面數'),
-    ],
-    questions: [
-      Question(
-        id: 'q1',
-        type: QuestionType.multipleChoice,
-        prompt: '🐰🐱🐶🐼，從左邊數，🐶 是第幾個？',
-        options: ['第 1', '第 2', '第 3', '第 4'],
-        correctIndex: 2,
-      ),
-      Question(
-        id: 'q2',
-        type: QuestionType.multipleChoice,
-        prompt: '5 位小朋友排一列，小強從後面數是第 2 個，那他從前面數是第幾個？',
-        options: ['第 2', '第 3', '第 4', '第 5'],
-        correctIndex: 2,
-        explanation: '5 − 2 + 1 = 4，從前面數是第 4 個。',
-      ),
-    ],
-  ),
-  Lesson(
-    id: 'cl-m-1-1-u5',
-    subjectId: 'math',
-    grade: 1,
-    track: CurriculumTrack.core,
-    semester: Semester.first,
-    unit: 5,
-    title: '比長短',
-    summary: '認識長度比較',
-    content: '把兩個東西的一端對齊，再看另一端，就能比出長短。\n\n鉛筆 ▬▬▬▬▬\n尺子 ▬▬▬▬▬▬▬\n\n尺子比較「長」，鉛筆比較「短」。',
-    estimatedMinutes: 10,
-    objectives: [
-      '能說出比長短要先一端對齊',
-      '能用長、短描述比較結果',
-    ],
-    keyPoints: [
-      '沒對齊容易比錯',
-      '眼睛看與實際量要配合',
-    ],
-    vocabulary: [
-      VocabItem(term: '長', meaning: '一端到另一端的距離較遠', example: '尺較長'),
-      VocabItem(term: '短', meaning: '距離較近', example: '鉛筆較短'),
-    ],
-    questions: [
-      Question(
-        id: 'q1',
-        type: QuestionType.multipleChoice,
-        prompt: '比較兩個東西的長短時，要先做什麼？',
-        options: ['閉上眼睛', '兩端都不對齊', '一端對齊', '放進抽屜'],
-        correctIndex: 2,
-      ),
-    ],
-  ),
-  Lesson(
-    id: 'cl-m-1-1-u6',
-    subjectId: 'math',
-    grade: 1,
-    track: CurriculumTrack.core,
-    semester: Semester.first,
-    unit: 6,
-    title: '幾點鐘',
-    summary: '認識整點時間',
-    content: '時鐘上有「短針」和「長針」。\n長針指向 12，短針指向哪裡就是幾點鐘。\n\n例如：短針指 3，長針指 12 → 3 點\n短針指 7，長針指 12 → 7 點',
-    estimatedMinutes: 10,
-    objectives: [
-      '能讀出整點時間（長針指 12）',
-      '能將生活事件與整點連結',
-    ],
-    keyPoints: [
-      '短針指幾、長針指 12 就是幾點',
-      '先認識整點再學半點、幾分',
-    ],
-    vocabulary: [
-      VocabItem(term: '時針', meaning: '較短的指針', example: '指 8 是 8 點多'),
-      VocabItem(term: '分針', meaning: '較長的指針', example: '指 12 是整點'),
-    ],
-    questions: [
-      Question(
-        id: 'q1',
-        type: QuestionType.multipleChoice,
-        prompt: '短針指 5，長針指 12，現在是幾點？',
-        options: ['5 點', '12 點', '5:30', '12:05'],
-        correctIndex: 0,
-      ),
-      Question(
-        id: 'q2',
-        type: QuestionType.multipleChoice,
-        prompt: '上學時，時鐘的短針指 8，長針指 12，現在是？',
-        options: ['8 點半', '8 點', '12 點', '不知道'],
-        correctIndex: 1,
-      ),
-    ],
-  ),
+/// 一年級上學期依康軒、翰林、南一的單元順序編寫。
+/// 例子與練習為自編，對齊各版本單元，不摘錄出版社原文。
+/// 一年級下學期起仍依 108 課綱學習內容編寫，不依特定版本教科書。
+final List<Lesson> kMathLessons = [
+  ...kKangxuanMathBookLessons,
+  ...kHanlinMathBookLessons,
+  ...kNaniMathBookLessons,
+  ...kMathCoreLessons,
+];
 
+const List<Lesson> kMathCoreLessons = [
   // ======== 一年級 下學期 ========
   Lesson(
     id: 'cl-m-1-2-u1',
@@ -267,7 +27,8 @@ const List<Lesson> kMathLessons = [
     unit: 1,
     title: '20 以內的數',
     summary: '10 到 20 的認識',
-    content: '10 個一數就是「一個十」。\n\n10 + 3 = 13（一個十和三個一）\n10 + 7 = 17（一個十和七個一）\n\n從 10 數到 20：\n10、11、12、13、14、15、16、17、18、19、20',
+    content:
+        '10 個一數就是「一個十」。\n\n10 + 3 = 13（一個十和三個一）\n10 + 7 = 17（一個十和七個一）\n\n從 10 數到 20：\n10、11、12、13、14、15、16、17、18、19、20',
     estimatedMinutes: 10,
     objectives: [
       '能說出 11–20 的組成（幾個十與幾個一）',
@@ -307,7 +68,8 @@ const List<Lesson> kMathLessons = [
     unit: 2,
     title: '加減直式計算',
     summary: '20 以內的加減',
-    content: '直式計算時，個位對個位，十位對十位。\n\n  1 2\n+   5\n────\n  1 7\n\n  1 8\n-   6\n────\n  1 2',
+    content:
+        '直式計算時，個位對個位，十位對十位。\n\n  1 2\n+   5\n────\n  1 7\n\n  1 8\n-   6\n────\n  1 2',
     estimatedMinutes: 10,
     objectives: [
       '能將個位與十位對齊做直式加減',
@@ -355,7 +117,8 @@ const List<Lesson> kMathLessons = [
     unit: 3,
     title: '100 以內的數',
     summary: '兩位數的認識',
-    content: '幾十幾：\n• 35 = 3 個十 + 5 個一\n• 72 = 7 個十 + 2 個一\n\n十位數字變大 → 整個數字也變大\n\n比較大小：48 < 53（先比十位，4 < 5）',
+    content:
+        '幾十幾：\n• 35 = 3 個十 + 5 個一\n• 72 = 7 個十 + 2 個一\n\n十位數字變大 → 整個數字也變大\n\n比較大小：48 < 53（先比十位，4 < 5）',
     estimatedMinutes: 10,
     objectives: [
       '能說出兩位數的十位與個位意義',
@@ -395,7 +158,8 @@ const List<Lesson> kMathLessons = [
     unit: 4,
     title: '幾月幾日',
     summary: '認識月曆',
-    content: '一年有 12 個月。\n\n每個月的天數不一樣：\n• 1、3、5、7、8、10、12 月有 31 天\n• 4、6、9、11 月有 30 天\n• 2 月平年 28 天，閏年 29 天\n\n一週有 7 天：星期一到星期日',
+    content:
+        '一年有 12 個月。\n\n每個月的天數不一樣：\n• 1、3、5、7、8、10、12 月有 31 天\n• 4、6、9、11 月有 30 天\n• 2 月平年 28 天，閏年 29 天\n\n一週有 7 天：星期一到星期日',
     estimatedMinutes: 10,
     objectives: [
       '能說出一年有 12 個月、一週有 7 天',
@@ -435,7 +199,8 @@ const List<Lesson> kMathLessons = [
     unit: 5,
     title: '認識錢幣',
     summary: '1、5、10 元與付錢找錢',
-    content: '我們用「元」來買東西。\n\n常見硬幣與紙鈔：\n• 1 元、5 元、10 元硬幣\n• 50 元、100 元紙鈔\n\n買 7 元的飲料，付 10 元，找回 10 − 7 = 3 元。\n付錢時要數清楚，也要愛惜錢幣。',
+    content:
+        '我們用「元」來買東西。\n\n常見硬幣與紙鈔：\n• 1 元、5 元、10 元硬幣\n• 50 元、100 元紙鈔\n\n買 7 元的飲料，付 10 元，找回 10 − 7 = 3 元。\n付錢時要數清楚，也要愛惜錢幣。',
     estimatedMinutes: 10,
     objectives: [
       '能辨認 1、5、10 元等常見錢幣',
@@ -473,7 +238,6 @@ const List<Lesson> kMathLessons = [
       ),
     ],
   ),
-
 
   // ======== 二年級 上學期 ========
   Lesson(
@@ -546,7 +310,8 @@ const List<Lesson> kMathLessons = [
     unit: 2,
     title: '加減直式（進位與借位）',
     summary: '兩位數的加減',
-    content: '【進位加法】\n  2 7\n+ 1 6\n────\n  4 3\n個位 7+6=13，寫 3 進 1；十位 2+1+1=4。\n\n【借位減法】\n  5 2\n- 1 8\n────\n  3 4\n個位 2 不夠減 8，向十位借 1 變 12−8=4；十位 4−1=3。',
+    content:
+        '【進位加法】\n  2 7\n+ 1 6\n────\n  4 3\n個位 7+6=13，寫 3 進 1；十位 2+1+1=4。\n\n【借位減法】\n  5 2\n- 1 8\n────\n  3 4\n個位 2 不夠減 8，向十位借 1 變 12−8=4；十位 4−1=3。',
     estimatedMinutes: 10,
     objectives: [
       '能處理兩位數進位加與借位減',
@@ -594,7 +359,8 @@ const List<Lesson> kMathLessons = [
     unit: 3,
     title: '長度（公分）',
     summary: '認識公分尺',
-    content: '1 公分可以寫作 1 cm。\n\n用尺量長度時：\n① 一端對齊 0\n② 另一端讀刻度\n\n一枝鉛筆 ≈ 14 cm\n一支手機 ≈ 15 cm',
+    content:
+        '1 公分可以寫作 1 cm。\n\n用尺量長度時：\n① 一端對齊 0\n② 另一端讀刻度\n\n一枝鉛筆 ≈ 14 cm\n一支手機 ≈ 15 cm',
     estimatedMinutes: 10,
     objectives: [
       '能用公分尺量長度並讀刻度',
@@ -634,7 +400,8 @@ const List<Lesson> kMathLessons = [
     unit: 4,
     title: '四邊形與三角形',
     summary: '認識平面圖形',
-    content: '• 三角形：3 個邊、3 個角\n• 四邊形：4 個邊、4 個角\n  – 正方形：4 邊都一樣長\n  – 長方形：對邊一樣長\n\n數一數：\n🔺 有 3 個邊\n⬛ 有 4 個邊',
+    content:
+        '• 三角形：3 個邊、3 個角\n• 四邊形：4 個邊、4 個角\n  – 正方形：4 邊都一樣長\n  – 長方形：對邊一樣長\n\n數一數：\n🔺 有 3 個邊\n⬛ 有 4 個邊',
     estimatedMinutes: 10,
     objectives: [
       '能辨識三角形與四邊形',
@@ -674,7 +441,8 @@ const List<Lesson> kMathLessons = [
     unit: 5,
     title: '乘法的意義',
     summary: '幾個幾相加',
-    content: '「幾個幾」就是乘法：\n\n3 個 4 相加：4 + 4 + 4 = 12\n寫作：4 × 3 = 12\n\n2 個 5 相加：5 + 5 = 10\n寫作：5 × 2 = 10',
+    content:
+        '「幾個幾」就是乘法：\n\n3 個 4 相加：4 + 4 + 4 = 12\n寫作：4 × 3 = 12\n\n2 個 5 相加：5 + 5 = 10\n寫作：5 × 2 = 10',
     estimatedMinutes: 10,
     objectives: [
       '能將「幾個幾」寫成乘法算式',
@@ -722,7 +490,8 @@ const List<Lesson> kMathLessons = [
     unit: 6,
     title: '分類與資料',
     summary: '做記號、數數、簡單表格',
-    content: '把東西「分類」後，用「畫正」或「打勾」記錄每一類有幾個，就是資料整理的第一步。\n\n例：班上同學最喜歡的水果，分蘋果、香蕉、葡萄三類，一個一個問，記錄人數。\n\n最後可以比一比哪一類最多、哪一類最少。',
+    content:
+        '把東西「分類」後，用「畫正」或「打勾」記錄每一類有幾個，就是資料整理的第一步。\n\n例：班上同學最喜歡的水果，分蘋果、香蕉、葡萄三類，一個一個問，記錄人數。\n\n最後可以比一比哪一類最多、哪一類最少。',
     estimatedMinutes: 10,
     objectives: [
       '能依指定標準做分類',
@@ -761,7 +530,6 @@ const List<Lesson> kMathLessons = [
     ],
   ),
 
-
   // ======== 二年級 下學期 ========
   Lesson(
     id: 'cl-m-2-2-u1',
@@ -772,7 +540,8 @@ const List<Lesson> kMathLessons = [
     unit: 1,
     title: '1000 以內的數',
     summary: '認識千位',
-    content: '10 個百就是 1 個千。\n\n例：三位數 527，百位｜十位｜個位\n  5 ｜ 2 ｜ 7   →  527，讀作「五百二十七」。\n1000 讀作「一千」，是 10 個百合起來。',
+    content:
+        '10 個百就是 1 個千。\n\n例：三位數 527，百位｜十位｜個位\n  5 ｜ 2 ｜ 7   →  527，讀作「五百二十七」。\n1000 讀作「一千」，是 10 個百合起來。',
     estimatedMinutes: 10,
     objectives: [
       '能讀寫 1000 以內的數並說出位名',
@@ -812,7 +581,8 @@ const List<Lesson> kMathLessons = [
     unit: 2,
     title: '九九乘法（2、5、10）',
     summary: '基礎乘法表',
-    content: '【2 的乘法】\n2 × 1=2、×2=4、×3=6、×4=8、×5=10、×6=12、×7=14、×8=16、×9=18\n\n【5 的乘法】\n5 × 1=5、×2=10、×3=15、…、×9=45\n\n【10 的乘法】\n10 × 1=10、×2=20、…、×9=90',
+    content:
+        '【2 的乘法】\n2 × 1=2、×2=4、×3=6、×4=8、×5=10、×6=12、×7=14、×8=16、×9=18\n\n【5 的乘法】\n5 × 1=5、×2=10、×3=15、…、×9=45\n\n【10 的乘法】\n10 × 1=10、×2=20、…、×9=90',
     estimatedMinutes: 10,
     objectives: [
       '能熟練 2、5、10 的乘法',
@@ -859,7 +629,8 @@ const List<Lesson> kMathLessons = [
     unit: 3,
     title: '毫米（mm）',
     summary: '更小的長度單位',
-    content: '比公分更小的單位是毫米 (mm)。\n\n1 公分 = 10 毫米\n3 cm = 30 mm\n5 cm = 50 mm\n\n公分尺上，小格子就是 1 毫米。',
+    content:
+        '比公分更小的單位是毫米 (mm)。\n\n1 公分 = 10 毫米\n3 cm = 30 mm\n5 cm = 50 mm\n\n公分尺上，小格子就是 1 毫米。',
     estimatedMinutes: 10,
     objectives: [
       '能說出 1 公分等於 10 毫米',
@@ -899,7 +670,8 @@ const List<Lesson> kMathLessons = [
     unit: 4,
     title: '容量與重量',
     summary: '初步認識升、公斤',
-    content: '【容量】裝多少水的多少\n• 牛奶盒 ≈ 1 公升 (L)\n• 水壺 ≈ 500 毫升 (mL)\n\n【重量】物品有多重\n• 小朋友書包 ≈ 3 公斤 (kg)\n• 一顆蘋果 ≈ 200 公克 (g)',
+    content:
+        '【容量】裝多少水的多少\n• 牛奶盒 ≈ 1 公升 (L)\n• 水壺 ≈ 500 毫升 (mL)\n\n【重量】物品有多重\n• 小朋友書包 ≈ 3 公斤 (kg)\n• 一顆蘋果 ≈ 200 公克 (g)',
     estimatedMinutes: 10,
     objectives: [
       '能區分容量與重量常用單位',
@@ -939,7 +711,8 @@ const List<Lesson> kMathLessons = [
     unit: 5,
     title: '分數的初步',
     summary: '幾分之一',
-    content: '把一個東西平分成幾份，其中的一份就是「幾分之一」。\n\n🍕 分成 2 份 → 每一份是 1/2\n🍰 分成 4 份 → 每一份是 1/4\n\n讀作：二分之一、四分之一',
+    content:
+        '把一個東西平分成幾份，其中的一份就是「幾分之一」。\n\n🍕 分成 2 份 → 每一份是 1/2\n🍰 分成 4 份 → 每一份是 1/4\n\n讀作：二分之一、四分之一',
     estimatedMinutes: 10,
     objectives: [
       '能說出平分後「一份」是幾分之一',
@@ -979,7 +752,8 @@ const List<Lesson> kMathLessons = [
     unit: 6,
     title: '時間（幾時幾分）',
     summary: '讀出幾點幾分',
-    content: '時鐘長針走一圈 = 60 分鐘 = 1 小時。\n長針每走 1 格 = 5 分鐘。\n\n例：\n• 短針在 3 和 4 之間、長針指 6 → 3:30\n• 短針在 7 和 8 之間、長針指 3 → 7:15',
+    content:
+        '時鐘長針走一圈 = 60 分鐘 = 1 小時。\n長針每走 1 格 = 5 分鐘。\n\n例：\n• 短針在 3 和 4 之間、長針指 6 → 3:30\n• 短針在 7 和 8 之間、長針指 3 → 7:15',
     estimatedMinutes: 10,
     objectives: [
       '能讀出幾點幾分',

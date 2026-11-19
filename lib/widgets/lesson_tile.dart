@@ -83,12 +83,9 @@ class LessonTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                progress.completed
-                    ? Icons.check_circle
-                    : Icons.chevron_right,
-                color: progress.completed
-                    ? const Color(0xFF43A047)
-                    : Colors.grey,
+                progress.completed ? Icons.check_circle : Icons.chevron_right,
+                color:
+                    progress.completed ? const Color(0xFF43A047) : Colors.grey,
                 size: 28,
               ),
             ],
@@ -101,13 +98,13 @@ class LessonTile extends StatelessWidget {
   Widget _buildTrackBadge(Lesson lesson) {
     final sem = lesson.semester?.label ?? '';
     final part = lesson.part == null ? '' : ' ${lesson.part!.label}';
+    final unitWord =
+        lesson.publisher != null && lesson.subjectId == 'chinese' ? '課' : '單元';
     final unit = lesson.unitLabel != null
         ? ' ${lesson.unitLabel}'
         : lesson.unit == null
             ? ''
-            : lesson.publisher != null
-                ? ' 第 ${lesson.unit} 課'
-                : ' 第 ${lesson.unit} 單元';
+            : ' 第 ${lesson.unit} $unitWord';
     final pub = lesson.publisher?.label ?? '';
     final label = sem.isEmpty
         ? (pub.isEmpty ? lesson.track.label : pub)
